@@ -8,16 +8,16 @@
 
 ## Son Güncelleme
 
-- **Tarih:** _(henüz başlanmadı)_
-- **Güncelleyen:** _(kullanıcı / Gemini oturumu)_
+- **Tarih:** 2026-08-04
+- **Güncelleyen:** Gemini Oturumu
 
 ---
 
 ## Genel Durum Özeti
 
-**Şu an aktif faz:** Faz 0 — Proje Kurulumu (henüz başlanmadı)
+**Şu an aktif faz:** Faz 1 — INSPINIA Tema Entegrasyonu
 
-**Sıradaki somut adım:** _(ör. "Solution ve klasör yapısının oluşturulması için onay bekleniyor")_
+**Sıradaki somut adım:** `_PanelLayout.cshtml` ve `_PublicLayout.cshtml` iskeletlerinin oluşturulması ve ortak partial view'ların ayrıştırılması.
 
 ---
 
@@ -25,8 +25,8 @@
 
 | Faz | Açıklama | Durum | Not |
 |---|---|---|---|
-| 0 | Proje Kurulumu (Bootstrap) | ⬜ Beklemede | |
-| 1 | INSPINIA Tema Entegrasyonu | ⬜ Beklemede | |
+| 0 | Proje Kurulumu (Bootstrap) | ✅ Tamamlandı | Veritabanı oluşturuldu, altyapı hazırlandı. |
+| 1 | INSPINIA Tema Entegrasyonu | 🔄 Devam Ediyor | Statik dosyalar eklendi, Razor view iskeletleri bekliyor. |
 | 2 | Domain Katmanı | ⬜ Beklemede | |
 | 3 | Data Katmanı (Dapper + Generic Repository) | ⬜ Beklemede | |
 | 4 | Application Katmanı (Generic Service) | ⬜ Beklemede | |
@@ -80,6 +80,8 @@
 
 - Kurumun mail tabanlı kimlik doğrulama sisteminin protokolü/altyapısı henüz belirsiz (bkz. `PRD.md` Bölüm 4, Aşama 2) — `InstitutionalAuthProvider` bu netleştiğinde tasarlanacak.
 - Geliştirmede kullanılacak kesin .NET sürümü teyit edilmeli (PRD'de "en güncel LTS" olarak bırakıldı).
+- **SuperAdmin Seed Data:** `schema.sql` ile veritabanı kurulduğunda sadece varsayılan Roller eklenmiştir. İlk giriş yapacak "SuperAdmin" kullanıcısı henüz sistemde yoktur. Faz 6'da (Kimlik Doğrulama) şifre hash'leme (Password Hashing) altyapısı kurulduktan sonra, ilk SuperAdmin kullanıcısı seed/script ile eklenecektir.
+- **AuditLogs Tablosu (Serilog):** Faz 5'te Serilog yapılandırması yapılırken `columnOptionsSection` ile `UserId`, `IPAddress` ve `RequestPath` sütunlarının ayrı sütun olarak tanımlanması gerekiyor. (Varsayılan `autoCreateSqlTable` şeması, sonradan Panel üzerinden kullanıcı bazlı filtrelemeyi desteklemez, standart log sütunları ile tabloyu oluşturur).
 
 ---
 
