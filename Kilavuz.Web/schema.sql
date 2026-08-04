@@ -28,7 +28,7 @@ CREATE TABLE Applications (
     IconPath NVARCHAR(500),
     SortOrder INT NOT NULL DEFAULT 0,
     IsActive BIT NOT NULL DEFAULT 1,
-    AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public', -- 'Public' or 'Restricted'
+    AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public' CHECK (AccessType IN ('Public', 'Restricted')), -- 'Public' or 'Restricted'
     CreatedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
     UpdatedAt DATETIME2 NULL,
@@ -56,7 +56,7 @@ CREATE TABLE Pages (
     CoverImagePath NVARCHAR(500),
     SortOrder INT NOT NULL DEFAULT 0,
     IsActive BIT NOT NULL DEFAULT 1,
-    AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public', -- 'Public' or 'Restricted'
+    AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public' CHECK (AccessType IN ('Public', 'Restricted')), -- 'Public' or 'Restricted'
     CreatedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
     UpdatedAt DATETIME2 NULL,
@@ -76,7 +76,7 @@ CREATE TABLE PageAttachments (
 
 CREATE TABLE ContentPermissions (
     Id INT IDENTITY(1,1) PRIMARY KEY,
-    ContentType NVARCHAR(50) NOT NULL, -- 'Application' or 'Page'
+    ContentType NVARCHAR(50) NOT NULL CHECK (ContentType IN ('Application', 'Page')), -- 'Application' or 'Page'
     ContentId INT NOT NULL,
     UserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
     GrantedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
