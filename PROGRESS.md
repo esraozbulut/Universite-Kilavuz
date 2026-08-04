@@ -15,9 +15,9 @@
 
 ## Genel Durum Özeti
 
-**Şu an aktif faz:** Faz 1 — INSPINIA Tema Entegrasyonu
+**Şu an aktif faz:** Faz 2 — Domain Katmanı
 
-**Sıradaki somut adım:** `_PanelLayout.cshtml` ve `_PublicLayout.cshtml` iskeletlerinin oluşturulması ve ortak partial view'ların ayrıştırılması.
+**Sıradaki somut adım:** Veritabanı tablolarına karşılık gelen temel Entity sınıflarının (`Application`, `Category`, `Page`, vb.) `Models/Entities` veya `Domain` altında oluşturulması.
 
 ---
 
@@ -26,7 +26,7 @@
 | Faz | Açıklama | Durum | Not |
 |---|---|---|---|
 | 0 | Proje Kurulumu (Bootstrap) | ✅ Tamamlandı | Veritabanı oluşturuldu, altyapı hazırlandı. |
-| 1 | INSPINIA Tema Entegrasyonu | 🔄 Devam Ediyor | Statik dosyalar eklendi, Razor view iskeletleri bekliyor. |
+| 1 | INSPINIA Tema Entegrasyonu | ✅ Tamamlandı | Statik dosyalar eklendi, Razor view iskeletleri oluşturuldu. |
 | 2 | Domain Katmanı | ⬜ Beklemede | |
 | 3 | Data Katmanı (Dapper + Generic Repository) | ⬜ Beklemede | |
 | 4 | Application Katmanı (Generic Service) | ⬜ Beklemede | |
@@ -89,7 +89,7 @@
 
 *(Faz ilerledikçe ortaya çıkan, unutulmaması gereken teknik notlar buraya eklenir.)*
 
-- _(henüz kayıt yok)_
+- **Infrastructure Şablon Kodları:** `Infrastructure/Captcha/AiGeneratedCaptchaProvider.cs` dosyası projeye Faz 0 şablonuyla birlikte önceden gelmiş, şu an atıl durumda. Faz 5'e gelindiğinde bu dosyanın PRD.md Bölüm 5 ile tam uyumlu olup olmadığı sıfırdan gözden geçirilmeli; ayrıca CS0618 (kullanımdan kaldırılmış metot) uyarısı o aşamada çözülmeli.
 
 ---
 
