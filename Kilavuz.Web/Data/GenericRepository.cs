@@ -1,5 +1,6 @@
 using Dapper;
-using Kilavuz.Web.Domain;
+using Kilavuz.Web.Domain.Entities;
+using Kilavuz.Web.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
@@ -18,7 +19,6 @@ namespace Kilavuz.Web.Data
         {
             _configuration = configuration;
             // Varsayılan olarak sınıf adının sonuna 's' ekliyoruz, veritabanına uyum için
-            // Gerçek uygulamada [Table("Name")] attribute okuması da eklenebilir.
             _tableName = typeof(T).Name + "s";
             if (_tableName == "Categorys") _tableName = "Categories";
             if (_tableName == "ContentPermissions") _tableName = "ContentPermissions";
@@ -32,14 +32,16 @@ namespace Kilavuz.Web.Data
         public async Task<T> GetByIdAsync(int id)
         {
             using var connection = GetConnection();
-            var query = $"SELECT * FROM {_tableName} WHERE Id = @Id AND IsDeleted = 0";
+            var hasSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(typeof(T));
+            var query = $"SELECT * FROM {_tableName} WHERE Id = @Id" + (hasSoftDelete ? " AND IsDeleted = 0" : "");
             return await connection.QuerySingleOrDefaultAsync<T>(query, new { Id = id });
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             using var connection = GetConnection();
-            var query = $"SELECT * FROM {_tableName} WHERE IsDeleted = 0";
+            var hasSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(typeof(T));
+            var query = $"SELECT * FROM {_tableName}" + (hasSoftDelete ? " WHERE IsDeleted = 0" : "");
             return await connection.QueryAsync<T>(query);
         }
 
@@ -65,26 +67,34 @@ namespace Kilavuz.Web.Data
             return result > 0;
         }
 
-        public async Task<bool> DeleteAsync(int id)
-        {
-            using var connection = GetConnection();
-            var query = $"DELETE FROM {_tableName} WHERE Id = @Id";
-            var result = await connection.ExecuteAsync(query, new { Id = id });
-            return result > 0;
-        }
-
         public async Task<bool> SoftDeleteAsync(int id, int deletedByUserId)
         {
+            if (!typeof(ISoftDeletable).IsAssignableFrom(typeof(T)))
+            {
+                throw new NotSupportedException($"Entity of type {typeof(T).Name} does not support soft deletion.");
+            }
+
             using var connection = GetConnection();
-            // Bu kolonların tüm entity'lerde olup olmadığını kontrol etmek gerek,
-            // ISoftDeletable interface'i eklenebilir. Şimdilik Reflection yerine basit model varsayılıyor.
-            var query = $"UPDATE {_tableName} SET IsDeleted = 1, UpdatedAt = @UpdatedAt WHERE Id = @Id";
-            var result = await connection.ExecuteAsync(query, new { Id = id, UpdatedAt = DateTime.UtcNow });
+            var hasAuditable = typeof(IAuditable).IsAssignableFrom(typeof(T));
+            
+            var query = $"UPDATE {_tableName} SET IsDeleted = 1";
+            if (hasAuditable)
+            {
+                query += ", UpdatedAt = GETUTCDATE()";
+            }
+            query += " WHERE Id = @Id";
+
+            var result = await connection.ExecuteAsync(query, new { Id = id });
             return result > 0;
         }
 
         public async Task<bool> ReorderAsync(int id, int newSortOrder)
         {
+            if (!typeof(IOrderable).IsAssignableFrom(typeof(T)))
+            {
+                throw new NotSupportedException($"Entity of type {typeof(T).Name} does not support ordering.");
+            }
+
             using var connection = GetConnection();
             var query = $"UPDATE {_tableName} SET SortOrder = @SortOrder WHERE Id = @Id";
             var result = await connection.ExecuteAsync(query, new { Id = id, SortOrder = newSortOrder });

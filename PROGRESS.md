@@ -8,16 +8,16 @@
 
 ## Son Güncelleme
 
-- **Tarih:** 2026-08-04
+- **Tarih:** 2026-08-05
 - **Güncelleyen:** Gemini Oturumu
 
 ---
 
 ## Genel Durum Özeti
 
-**Şu an aktif faz:** Faz 2 — Domain Katmanı
+**Şu an aktif faz:** Faz 3 — Data Katmanı
 
-**Sıradaki somut adım:** Veritabanı tablolarına karşılık gelen temel Entity sınıflarının (`Application`, `Category`, `Page`, vb.) `Models/Entities` veya `Domain` altında oluşturulması.
+**Sıradaki somut adım:** Generic Repository sınıfının ve Dapper sorgularının veri tabanına bağlanarak işleyişinin doğrulanması; eğer gerekliyse entity'ye özel repository'lerin (UserRepository vb.) tasarlanması.
 
 ---
 
@@ -27,8 +27,8 @@
 |---|---|---|---|
 | 0 | Proje Kurulumu (Bootstrap) | ✅ Tamamlandı | Veritabanı oluşturuldu, altyapı hazırlandı. |
 | 1 | INSPINIA Tema Entegrasyonu | ✅ Tamamlandı | Statik dosyalar eklendi, Razor view iskeletleri oluşturuldu. |
-| 2 | Domain Katmanı | ⬜ Beklemede | |
-| 3 | Data Katmanı (Dapper + Generic Repository) | ⬜ Beklemede | |
+| 2 | Domain Katmanı | ✅ Tamamlandı | Temel POCO sınıfları, arayüzler ve enumlar oluşturuldu. |
+| 3 | Data Katmanı (Dapper + Generic Repository) | 🔄 Devam Ediyor | GenericRepository güncellendi, PRD 8.3 ile uyumlu hale getirildi. |
 | 4 | Application Katmanı (Generic Service) | ⬜ Beklemede | |
 | 5 | Infrastructure Katmanı | ⬜ Beklemede | |
 | 6 | Kimlik Doğrulama ve Yetkilendirme | ⬜ Beklemede | |
@@ -70,7 +70,9 @@
 
 *(Proje ilerledikçe burada, ne zaman/hangi kararın verildiği kısaca not edilir — ör. "hangi rate limit eşiği seçildi", "hangi dosya boyutu sınırı belirlendi" gibi.)*
 
-- _(henüz kayıt yok)_
+- **Zaman Standardı:** Tüm projede ve veritabanında yerel saat yerine evrensel saat (UTC) kullanılmasına karar verildi (`GETUTCDATE()` ve `DateTime.UtcNow`). (2026-08-05)
+- **Hard Delete İptali:** Fiziksel silme (hard delete) işleminin standart CRUD'un bir parçası olmamasına ve generic repo/servislerden kaldırılarak açıkça `SoftDeleteAsync` kullanılmasına karar verildi. (2026-08-05)
+- **UserRoles Entity:** Dapper'ın junction tablolara eşlenmesi için `UserRole` ara tablosunun Domain katmanında C# entity'si olarak tutulmasına karar verildi. (2026-08-05)
 
 ---
 

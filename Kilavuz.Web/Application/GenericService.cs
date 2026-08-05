@@ -1,5 +1,7 @@
 using Kilavuz.Web.Data;
-using Kilavuz.Web.Domain;
+using Kilavuz.Web.Domain.Entities;
+using Kilavuz.Web.Domain.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -32,11 +34,10 @@ namespace Kilavuz.Web.Application
 
         public async Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId)
         {
-            // İlgili property'leri (CreatedByUserId vs.) reflection ile doldurabiliriz.
-            var createdByProp = typeof(T).GetProperty("CreatedByUserId");
-            if (createdByProp != null && createdByProp.CanWrite)
+            if (entity is IAuditable auditableEntity)
             {
-                createdByProp.SetValue(entity, currentUserId);
+                auditableEntity.CreatedByUserId = currentUserId;
+                auditableEntity.CreatedAt = DateTime.UtcNow;
             }
 
             var result = await _repository.InsertAsync(entity);
@@ -45,19 +46,30 @@ namespace Kilavuz.Web.Application
 
         public async Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId)
         {
+            if (entity is IAuditable auditableEntity)
+            {
+                auditableEntity.UpdatedAt = DateTime.UtcNow;
+            }
+
             var updated = await _repository.UpdateAsync(entity);
             if (updated)
                 return ServiceResult<bool>.Success(true, "Kayıt güncellendi.");
             return ServiceResult<bool>.Failure("Güncelleme başarısız.");
         }
 
-        public async Task<ServiceResult<bool>> DeleteAsync(int id, int currentUserId)
+        public async Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId)
         {
-            // Soft delete işlemi
-            var deleted = await _repository.SoftDeleteAsync(id, currentUserId);
-            if (deleted)
-                return ServiceResult<bool>.Success(true, "Kayıt silindi.");
-            return ServiceResult<bool>.Failure("Silme işlemi başarısız.");
+            try
+            {
+                var deleted = await _repository.SoftDeleteAsync(id, currentUserId);
+                if (deleted)
+                    return ServiceResult<bool>.Success(true, "Kayıt silindi.");
+                return ServiceResult<bool>.Failure("Silme işlemi başarısız.");
+            }
+            catch (NotSupportedException ex)
+            {
+                return ServiceResult<bool>.Failure(ex.Message);
+            }
         }
     }
 }

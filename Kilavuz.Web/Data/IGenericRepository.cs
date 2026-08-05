@@ -1,4 +1,5 @@
-using Kilavuz.Web.Domain;
+using Kilavuz.Web.Domain.Entities;
+using Kilavuz.Web.Domain.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,7 +11,6 @@ namespace Kilavuz.Web.Data
         Task<IEnumerable<T>> GetAllAsync();
         Task<int> InsertAsync(T entity);
         Task<bool> UpdateAsync(T entity);
-        Task<bool> DeleteAsync(int id);
         Task<bool> SoftDeleteAsync(int id, int deletedByUserId);
         Task<bool> ReorderAsync(int id, int newSortOrder);
     }

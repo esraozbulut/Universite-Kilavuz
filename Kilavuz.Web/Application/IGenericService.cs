@@ -1,4 +1,5 @@
-using Kilavuz.Web.Domain;
+using Kilavuz.Web.Domain.Entities;
+using Kilavuz.Web.Domain.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -20,6 +21,6 @@ namespace Kilavuz.Web.Application
         Task<ServiceResult<IEnumerable<T>>> GetAllAsync();
         Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId);
         Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId);
-        Task<ServiceResult<bool>> DeleteAsync(int id, int currentUserId);
+        Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId);
     }
 }

@@ -12,7 +12,7 @@ CREATE TABLE Users (
     Email NVARCHAR(255) NOT NULL UNIQUE,
     PasswordHash NVARCHAR(MAX) NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE()
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
 );
 
 CREATE TABLE UserRoles (
@@ -30,7 +30,7 @@ CREATE TABLE Applications (
     IsActive BIT NOT NULL DEFAULT 1,
     AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public' CHECK (AccessType IN ('Public', 'Restricted')), -- 'Public' or 'Restricted'
     CreatedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 NULL,
     IsDeleted BIT NOT NULL DEFAULT 0
 );
@@ -43,7 +43,7 @@ CREATE TABLE Categories (
     SortOrder INT NOT NULL DEFAULT 0,
     IsActive BIT NOT NULL DEFAULT 1,
     CreatedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 NULL,
     IsDeleted BIT NOT NULL DEFAULT 0
 );
@@ -58,7 +58,7 @@ CREATE TABLE Pages (
     IsActive BIT NOT NULL DEFAULT 1,
     AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public' CHECK (AccessType IN ('Public', 'Restricted')), -- 'Public' or 'Restricted'
     CreatedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 NULL,
     IsDeleted BIT NOT NULL DEFAULT 0
 );
@@ -71,7 +71,7 @@ CREATE TABLE PageAttachments (
     FileSize BIGINT NOT NULL,
     ContentType NVARCHAR(100) NOT NULL,
     UploadedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
-    UploadedAt DATETIME2 NOT NULL DEFAULT GETDATE()
+    UploadedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
 );
 
 CREATE TABLE ContentPermissions (
@@ -80,12 +80,12 @@ CREATE TABLE ContentPermissions (
     ContentId INT NOT NULL,
     UserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
     GrantedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
-    GrantedAt DATETIME2 NOT NULL DEFAULT GETDATE()
+    GrantedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
 );
 
 CREATE TABLE ErrorLogs (
     Id INT IDENTITY(1,1) PRIMARY KEY,
-    TimeStamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+    TimeStamp DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     Message NVARCHAR(MAX) NOT NULL,
     StackTrace NVARCHAR(MAX),
     RequestPath NVARCHAR(500),
@@ -97,7 +97,7 @@ CREATE TABLE LoginAttempts (
     UserNameAttempted NVARCHAR(255) NOT NULL,
     IPAddress NVARCHAR(50),
     IsSuccess BIT NOT NULL,
-    AttemptedAt DATETIME2 NOT NULL DEFAULT GETDATE()
+    AttemptedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
 );
 
 -- Varsayılan Rollerin Eklenmesi
