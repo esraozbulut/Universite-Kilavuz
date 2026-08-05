@@ -15,9 +15,9 @@
 
 ## Genel Durum Özeti
 
-**Şu an aktif faz:** Faz 4 — Application Katmanı
+**Şu an aktif faz:** Faz 5 — Infrastructure Katmanı
 
-**Sıradaki somut adım:** `GenericService`'in bağımlılıklarının kontrol edilmesi ve eğer business logic (özelleşmiş validasyon, özel DTO dönüşümleri) gerektiren noktalar varsa ilgili entity'lere (örn. Authentication için UserService) özel servis arayüzlerinin planlanması.
+**Sıradaki somut adım:** Çapraz kesen (cross-cutting) servislerin (Serilog, Rate Limiting, FileStorage, HtmlSanitizer, AuthenticationProvider) altyapısının kurulması. İlk olarak Serilog MSSQL loglama konfigürasyonu ile başlanacak.
 
 ---
 
@@ -29,8 +29,8 @@
 | 1 | INSPINIA Tema Entegrasyonu | ✅ Tamamlandı | Statik dosyalar eklendi, Razor view iskeletleri oluşturuldu. |
 | 2 | Domain Katmanı | ✅ Tamamlandı | Temel POCO sınıfları, arayüzler ve enumlar oluşturuldu. |
 | 3 | Data Katmanı (Dapper + Generic Repository) | ✅ Tamamlandı | GenericRepository test edildi ve PRD uyumu onaylandı. |
-| 4 | Application Katmanı (Generic Service) | 🔄 Devam Ediyor | |
-| 5 | Infrastructure Katmanı | ⬜ Beklemede | |
+| 4 | Application Katmanı (Generic Service) | ✅ Tamamlandı | IResourceOwnershipPolicy ve IReorderService entegre edildi, rol bazlı yetkiler doğrulandı. |
+| 5 | Infrastructure Katmanı | 🔄 Devam Ediyor | Serilog, Captcha, Rate Limit, FileStorage, HtmlSanitizer, AuthProvider. |
 | 6 | Kimlik Doğrulama ve Yetkilendirme | ⬜ Beklemede | |
 | 7 | Panel Modülleri | ⬜ Beklemede | |
 | 8 | UI (Public) Modülleri | ⬜ Beklemede | |
