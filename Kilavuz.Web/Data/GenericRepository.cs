@@ -21,7 +21,6 @@ namespace Kilavuz.Web.Data
             // Varsayılan olarak sınıf adının sonuna 's' ekliyoruz, veritabanına uyum için
             _tableName = typeof(T).Name + "s";
             if (_tableName == "Categorys") _tableName = "Categories";
-            if (_tableName == "ContentPermissions") _tableName = "ContentPermissions";
         }
 
         private SqlConnection GetConnection()
