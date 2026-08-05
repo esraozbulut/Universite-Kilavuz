@@ -19,8 +19,8 @@ namespace Kilavuz.Web.Application
     {
         Task<ServiceResult<T>> GetByIdAsync(int id);
         Task<ServiceResult<IEnumerable<T>>> GetAllAsync();
-        Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId);
-        Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId);
-        Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId);
+        Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId, string currentUserRole);
+        Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId, string currentUserRole);
+        Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId, string currentUserRole);
     }
 }

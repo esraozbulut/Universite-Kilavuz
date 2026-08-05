@@ -11,7 +11,7 @@ namespace Kilavuz.Web.Data
         Task<IEnumerable<T>> GetAllAsync();
         Task<int> InsertAsync(T entity);
         Task<bool> UpdateAsync(T entity);
-        Task<bool> SoftDeleteAsync(int id, int deletedByUserId);
+        Task<bool> SoftDeleteAsync(int id, int deletedByUserId, string currentUserRole);
         Task<bool> ReorderAsync(int id, int newSortOrder);
     }
 }

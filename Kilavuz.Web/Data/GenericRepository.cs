@@ -66,7 +66,7 @@ namespace Kilavuz.Web.Data
             return result > 0;
         }
 
-        public async Task<bool> SoftDeleteAsync(int id, int deletedByUserId)
+        public async Task<bool> SoftDeleteAsync(int id, int deletedByUserId, string currentUserRole)
         {
             if (!typeof(ISoftDeletable).IsAssignableFrom(typeof(T)))
             {

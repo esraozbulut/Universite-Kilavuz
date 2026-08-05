@@ -22,6 +22,8 @@ builder.Host.UseSerilog();
 // Generic Repository ve Service kayıtları
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
+builder.Services.AddScoped(typeof(Kilavuz.Web.Application.Interfaces.IResourceOwnershipPolicy<>), typeof(Kilavuz.Web.Application.ResourceOwnershipPolicy<>));
+builder.Services.AddScoped(typeof(Kilavuz.Web.Application.Interfaces.IReorderService<>), typeof(Kilavuz.Web.Application.ReorderService<>));
 builder.Services.AddScoped<ICaptchaProvider, AiGeneratedCaptchaProvider>();
 
 // MVC ve View eklentileri

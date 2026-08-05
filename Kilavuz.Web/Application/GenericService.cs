@@ -10,10 +10,12 @@ namespace Kilavuz.Web.Application
     public class GenericService<T> : IGenericService<T> where T : class, IEntity
     {
         private readonly IGenericRepository<T> _repository;
+        private readonly Application.Interfaces.IResourceOwnershipPolicy<T> _policy;
 
-        public GenericService(IGenericRepository<T> repository)
+        public GenericService(IGenericRepository<T> repository, Application.Interfaces.IResourceOwnershipPolicy<T> policy)
         {
             _repository = repository;
+            _policy = policy;
         }
 
         public async Task<ServiceResult<IEnumerable<T>>> GetAllAsync()
@@ -32,7 +34,7 @@ namespace Kilavuz.Web.Application
             return ServiceResult<T>.Success(data);
         }
 
-        public async Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId)
+        public async Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId, string currentUserRole)
         {
             if (entity is IAuditable auditableEntity)
             {
@@ -44,8 +46,13 @@ namespace Kilavuz.Web.Application
             return ServiceResult<int>.Success(result, "Kayıt başarıyla oluşturuldu.");
         }
 
-        public async Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId)
+        public async Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId, string currentUserRole)
         {
+            if (!_policy.CanModify(entity, currentUserId, currentUserRole))
+            {
+                return ServiceResult<bool>.Failure("Bu işlem için yetkiniz bulunmamaktadır.");
+            }
+
             if (entity is IAuditable auditableEntity)
             {
                 auditableEntity.UpdatedAt = DateTime.UtcNow;
@@ -57,11 +64,19 @@ namespace Kilavuz.Web.Application
             return ServiceResult<bool>.Failure("Güncelleme başarısız.");
         }
 
-        public async Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId)
+        public async Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId, string currentUserRole)
         {
             try
             {
-                var deleted = await _repository.SoftDeleteAsync(id, currentUserId);
+                var entity = await _repository.GetByIdAsync(id);
+                if (entity == null) return ServiceResult<bool>.Failure("Kayıt bulunamadı.");
+
+                if (!_policy.CanModify(entity, currentUserId, currentUserRole))
+                {
+                    return ServiceResult<bool>.Failure("Bu işlem için yetkiniz bulunmamaktadır.");
+                }
+
+                var deleted = await _repository.SoftDeleteAsync(id, currentUserId, currentUserRole);
                 if (deleted)
                     return ServiceResult<bool>.Success(true, "Kayıt silindi.");
                 return ServiceResult<bool>.Failure("Silme işlemi başarısız.");
