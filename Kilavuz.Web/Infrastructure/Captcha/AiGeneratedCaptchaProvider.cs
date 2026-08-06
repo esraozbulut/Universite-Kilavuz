@@ -72,7 +72,7 @@ public class AiGeneratedCaptchaProvider : ICaptchaProvider
             canvas.Save();
             canvas.Translate(x, y);
             canvas.RotateDegrees(rotation);
-            canvas.DrawText(charText, 0, 0, font, textPaint);
+            canvas.DrawText(charText, 0, 0, SKTextAlign.Left, font, textPaint);
             canvas.Restore();
         }
 
