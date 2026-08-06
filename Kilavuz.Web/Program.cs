@@ -9,14 +9,18 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Kilavuz.Web.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Serilog Konfigürasyonu
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .CreateLogger();
-builder.Host.UseSerilog();
+builder.Services.AddHttpContextAccessor();
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .Filter.With(new Kilavuz.Web.Infrastructure.Logging.AuditLogFilter(
+        services.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>(),
+        context.Configuration))
+);
 
 // 2. Servislerin (IoC) Kaydedilmesi
 // Generic Repository ve Service kayıtları
@@ -25,6 +29,8 @@ builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 builder.Services.AddScoped(typeof(Kilavuz.Web.Application.Interfaces.IResourceOwnershipPolicy<>), typeof(Kilavuz.Web.Application.ResourceOwnershipPolicy<>));
 builder.Services.AddScoped(typeof(Kilavuz.Web.Application.Interfaces.IReorderService<>), typeof(Kilavuz.Web.Application.ReorderService<>));
 builder.Services.AddScoped<ICaptchaProvider, AiGeneratedCaptchaProvider>();
+builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
+builder.Services.AddExceptionHandler<Kilavuz.Web.Infrastructure.Middleware.GlobalExceptionHandler>();
 
 // MVC ve View eklentileri
 builder.Services.AddControllersWithViews();
@@ -87,7 +93,11 @@ if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
 var app = builder.Build();
 
 // 5. Middleware Pipeline
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler(_ => { }); // This allows IExceptionHandler to run in Dev without a specific fallback route
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
