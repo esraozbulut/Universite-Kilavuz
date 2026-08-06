@@ -85,6 +85,7 @@
 - **SuperAdmin Seed Data:** `schema.sql` ile veritabanı kurulduğunda sadece varsayılan Roller eklenmiştir. İlk giriş yapacak "SuperAdmin" kullanıcısı henüz sistemde yoktur. Faz 6'da (Kimlik Doğrulama) şifre hash'leme (Password Hashing) altyapısı kurulduktan sonra, ilk SuperAdmin kullanıcısı seed/script ile eklenecektir.
 - **AuditLogs Tablosu (Serilog):** Faz 5'te Serilog yapılandırması yapılırken `columnOptionsSection` ile `UserId`, `IPAddress` ve `RequestPath` sütunlarının ayrı sütun olarak tanımlanması gerekiyor. (Varsayılan `autoCreateSqlTable` şeması, sonradan Panel üzerinden kullanıcı bazlı filtrelemeyi desteklemez, standart log sütunları ile tabloyu oluşturur).
 - **Yetkili İzinleri Sınırlaması (Faz 7'ye ertelendi):** Yetkili rolündeki bir kullanıcı, `PageAttachment` ve `ContentPermission` gibi `IAuditable` olmayan (Yani `CreatedByUserId` tutmayan) kaynaklarda şu an hiçbir zaman değişiklik yapamıyor (varsayılan red); bu durum Faz 7'de (Panel modülleri) ele alınmalı. Örneğin `PageAttachment` için silme/ekleme izni verilirken üst `Page` entity'sinin sahipliği kontrol edilerek izin verilebilir.
+- **Rate Limiting Kullanıcı Adı Kısıtı (Faz 6'ya ertelendi):** Mevcut `LoginPolicy` IP bazlı partition kullanmaktadır. PRD 9.4'te belirtilen "Kullanıcı adı + IP bazlı" kısıtlama, Faz 6'da login formu yazılırken POST body'sinden kullanıcı adı okunarak eklenecektir.
 
 ---
 

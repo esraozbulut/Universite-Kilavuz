@@ -68,23 +68,30 @@ if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
 {
     builder.Services.AddRateLimiter(options =>
     {
-        // Login için kısıtlı politika
-        options.AddFixedWindowLimiter("LoginPolicy", opt =>
-        {
-            opt.Window = System.TimeSpan.FromMinutes(1);
-            opt.PermitLimit = 5;
-            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            opt.QueueLimit = 0; // Login'de sıraya alma, direkt reddet
-        });
+        // Login için kısıtlı politika (IP bazlı)
+        options.AddPolicy("LoginPolicy", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 5,
+                    QueueLimit = 0,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
 
-        // Genel kullanım için politika
-        options.AddFixedWindowLimiter("GlobalPolicy", opt =>
-        {
-            opt.Window = System.TimeSpan.FromMinutes(1);
-            opt.PermitLimit = 100;
-            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            opt.QueueLimit = 2;
-        });
+        // Genel kullanım için politika (IP bazlı)
+        options.AddPolicy("GlobalPolicy", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 100,
+                    QueueLimit = 2,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
 
         options.RejectionStatusCode = 429; // Too Many Requests
     });
