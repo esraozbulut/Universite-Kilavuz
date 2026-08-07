@@ -86,6 +86,7 @@
 - **AuditLogs Tablosu (Serilog):** Faz 5'te Serilog yapılandırması yapılırken `columnOptionsSection` ile `UserId`, `IPAddress` ve `RequestPath` sütunlarının ayrı sütun olarak tanımlanması gerekiyor. (Varsayılan `autoCreateSqlTable` şeması, sonradan Panel üzerinden kullanıcı bazlı filtrelemeyi desteklemez, standart log sütunları ile tabloyu oluşturur).
 - **Yetkili İzinleri Sınırlaması (Faz 7'ye ertelendi):** Yetkili rolündeki bir kullanıcı, `PageAttachment` ve `ContentPermission` gibi `IAuditable` olmayan (Yani `CreatedByUserId` tutmayan) kaynaklarda şu an hiçbir zaman değişiklik yapamıyor (varsayılan red); bu durum Faz 7'de (Panel modülleri) ele alınmalı. Örneğin `PageAttachment` için silme/ekleme izni verilirken üst `Page` entity'sinin sahipliği kontrol edilerek izin verilebilir.
 - **Rate Limiting Kullanıcı Adı Kısıtı (Faz 6'ya ertelendi):** Mevcut `LoginPolicy` IP bazlı partition kullanmaktadır. PRD 9.4'te belirtilen "Kullanıcı adı + IP bazlı" kısıtlama, Faz 6'da login formu yazılırken POST body'sinden kullanıcı adı okunarak eklenecektir.
+- **PageAttachment İndirme İşlemi (Faz 7'ye ertelendi):** Dosya yükleme sonucu dönen `RelativePath` alanı (ör. `/App_Data/Uploads/Attachments/...`) doğrudan URL/link olarak kullanılamaz (statik sunuma kapalıdır). Faz 7'de bir Controller action'ı (ör. `/Panel/Sayfa/DosyaIndir/{id}`) üzerinden dosyayı App_Data'dan okuyup FileStreamResult olarak dönen güvenli bir mekanizma yazılmalıdır.
 
 ---
 
