@@ -31,6 +31,8 @@ builder.Services.AddScoped(typeof(Kilavuz.Web.Application.Interfaces.IReorderSer
 builder.Services.AddScoped<ICaptchaProvider, AiGeneratedCaptchaProvider>();
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
 builder.Services.AddScoped<IFileStorageService, Kilavuz.Web.Infrastructure.Storage.FileStorageService>();
+builder.Services.AddScoped<IHtmlSanitizerService, Kilavuz.Web.Infrastructure.Security.HtmlSanitizerService>();
+builder.Services.AddScoped<IPageService, Kilavuz.Web.Application.Services.PageService>();
 builder.Services.AddExceptionHandler<Kilavuz.Web.Infrastructure.Middleware.GlobalExceptionHandler>();
 
 // MVC ve View eklentileri

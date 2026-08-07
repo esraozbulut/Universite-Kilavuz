@@ -34,7 +34,7 @@ namespace Kilavuz.Web.Application
             return ServiceResult<T>.Success(data);
         }
 
-        public async Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId, string currentUserRole)
+        public virtual async Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId, string currentUserRole)
         {
             if (entity is IAuditable auditableEntity)
             {
@@ -46,7 +46,7 @@ namespace Kilavuz.Web.Application
             return ServiceResult<int>.Success(result, "Kayıt başarıyla oluşturuldu.");
         }
 
-        public async Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId, string currentUserRole)
+        public virtual async Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId, string currentUserRole)
         {
             if (!_policy.CanModify(entity, currentUserId, currentUserRole))
             {
