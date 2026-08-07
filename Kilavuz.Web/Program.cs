@@ -33,6 +33,7 @@ builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
 builder.Services.AddScoped<IFileStorageService, Kilavuz.Web.Infrastructure.Storage.FileStorageService>();
 builder.Services.AddScoped<IHtmlSanitizerService, Kilavuz.Web.Infrastructure.Security.HtmlSanitizerService>();
 builder.Services.AddScoped<IPageService, Kilavuz.Web.Application.Services.PageService>();
+builder.Services.AddScoped<IAuthenticationProvider, Kilavuz.Web.Infrastructure.Security.LocalTestAuthProvider>();
 builder.Services.AddExceptionHandler<Kilavuz.Web.Infrastructure.Middleware.GlobalExceptionHandler>();
 
 // MVC ve View eklentileri
