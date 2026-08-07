@@ -17,7 +17,7 @@
 
 **Şu an aktif faz:** Faz 5 — Infrastructure Katmanı (Devam Ediyor)
 
-**Sıradaki somut adım:** Faz 5 kapsamında Serilog/hata yönetimi alt-adımı tamamlandı. Sırada CAPTCHA gözden geçirmesi, Rate Limiting testi, FileStorage, HtmlSanitizer ve AuthenticationProvider adımları bulunmaktadır.
+**Sıradaki somut adım:** Faz 5 devam ediyor, HtmlSanitizer alt-adımı tamamlandı, sıradaki adım IAuthenticationProvider/LocalTestAuthProvider.
 
 ---
 
@@ -30,7 +30,7 @@
 | 2 | Domain Katmanı | ✅ Tamamlandı | Temel POCO sınıfları, arayüzler ve enumlar oluşturuldu. |
 | 3 | Data Katmanı (Dapper + Generic Repository) | ✅ Tamamlandı | GenericRepository test edildi ve PRD uyumu onaylandı. |
 | 4 | Application Katmanı (Generic Service) | ✅ Tamamlandı | IResourceOwnershipPolicy ve IReorderService entegre edildi, rol bazlı yetkiler doğrulandı. |
-| 5 | Infrastructure Katmanı | 🔄 Devam Ediyor | Serilog/Hata Yönetimi alt-adımı tamamlandı. Captcha, Rate Limit, vb. devam ediyor. |
+| 5 | Infrastructure Katmanı | 🔄 Devam Ediyor | HtmlSanitizer tamamlandı, sırada IAuthenticationProvider var. |
 | 6 | Kimlik Doğrulama ve Yetkilendirme | ⬜ Beklemede | |
 | 7 | Panel Modülleri | ⬜ Beklemede | |
 | 8 | UI (Public) Modülleri | ⬜ Beklemede | |
