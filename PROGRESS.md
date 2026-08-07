@@ -73,6 +73,7 @@
 - **Zaman Standardı:** Tüm projede ve veritabanında yerel saat yerine evrensel saat (UTC) kullanılmasına karar verildi (`GETUTCDATE()` ve `DateTime.UtcNow`). (2026-08-05)
 - **Hard Delete İptali:** Fiziksel silme (hard delete) işleminin standart CRUD'un bir parçası olmamasına ve generic repo/servislerden kaldırılarak açıkça `SoftDeleteAsync` kullanılmasına karar verildi. (2026-08-05)
 - **UserRoles Entity:** Dapper'ın junction tablolara eşlenmesi için `UserRole` ara tablosunun Domain katmanında C# entity'si olarak tutulmasına karar verildi. (2026-08-05)
+- Faz 5 sırasında Users tablosunda kaynağı belirsiz, şifresiz/rolsüz 3 test kaydı (test_sa, test_y1, test_y2) bulundu ve temizlendi - hiçbir oturumda bilerek oluşturulmadıkları teyit edildi, güvenlik riski taşımıyorlardı (geçersiz PasswordHash).
 
 ---
 
