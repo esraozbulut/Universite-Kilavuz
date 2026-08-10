@@ -1,0 +1,82 @@
+@model Kilavuz.Web.Areas.Panel.Models.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kılavuz | Giriş</title>
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="~/css/animate.css" rel="stylesheet">
+    <link href="~/css/style.css" rel="stylesheet">
+</head>
+
+<body class="gray-bg">
+
+    <div class="middle-box text-center loginscreen animated fadeInDown">
+        <div>
+            <div>
+                <h1 class="logo-name">KVZ</h1>
+            </div>
+            <h3>Kılavuz Yönetim Paneline Hoş Geldiniz</h3>
+            
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <div asp-validation-summary="All"></div>
+                </div>
+            }
+
+            <form class="m-t" role="form" asp-area="Panel" asp-controller="Auth" asp-action="Login" method="post">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" asp-for="CaptchaKey" id="hiddenCaptchaKey" />
+
+                <div class="form-group">
+                    <input type="text" asp-for="Username" class="form-control" placeholder="Kullanıcı Adı" required="">
+                </div>
+                <div class="form-group">
+                    <input type="password" asp-for="Password" class="form-control" placeholder="Şifre" required="">
+                </div>
+
+                <div class="form-group text-left">
+                    <label>Doğrulama Kodu</label>
+                    <div class="m-b-sm text-center">
+                        <img id="captchaImage" src="@Url.Action("CaptchaImage", "Auth", new { key = Model.CaptchaKey, area = "Panel" })" alt="Captcha" class="img-thumbnail" />
+                        <br/>
+                        <a href="javascript:void(0)" onclick="refreshCaptcha()" class="small"><i class="fa fa-refresh"></i> Yenile</a>
+                    </div>
+                    <input type="text" asp-for="CaptchaCode" class="form-control" placeholder="Resimdeki kodu giriniz" required="" autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn btn-primary block full-width m-b">Giriş Yap</button>
+
+            </form>
+            <p class="m-t"> <small>Kılavuz Kurumsal Yönetim Sistemi &copy; 2026</small> </p>
+        </div>
+    </div>
+
+    <!-- Mainly scripts -->
+    <script src="~/js/jquery-3.1.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.js"></script>
+    
+    <script>
+        function uuidv4() {
+            return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+
+        function refreshCaptcha() {
+            var newKey = uuidv4().replace(/-/g, '');
+            document.getElementById('hiddenCaptchaKey').value = newKey;
+            var newUrl = '@Url.Action("CaptchaImage", "Auth", new { area = "Panel" })' + '?key=' + newKey;
+            document.getElementById('captchaImage').src = newUrl;
+        }
+    </script>
+</body>
+</html>

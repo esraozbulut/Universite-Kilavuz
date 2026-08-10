@@ -24,6 +24,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 // 2. Servislerin (IoC) Kaydedilmesi
 // Generic Repository ve Service kayıtları
+builder.Services.AddSingleton<IDbConnectionFactory, Kilavuz.Web.Data.SqlConnectionFactory>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 builder.Services.AddScoped(typeof(Kilavuz.Web.Application.Interfaces.IResourceOwnershipPolicy<>), typeof(Kilavuz.Web.Application.ResourceOwnershipPolicy<>));
@@ -54,16 +55,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Panel/Auth/Login";
         options.AccessDeniedPath = "/Panel/Auth/AccessDenied";
-        options.Cookie.Name = "KilavuzAuthCookie";
+        options.Cookie.Name = "Kilavuz.Auth";
         options.Cookie.HttpOnly = true;
-        options.ExpireTimeSpan = System.TimeSpan.FromDays(1);
+        options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
+        options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+        options.ExpireTimeSpan = System.TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
     });
 
 // 4. Yetkilendirme (Policy-based)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("SuperAdminOnly", policy => policy.RequireRole("SuperAdmin"));
-    options.AddPolicy("YetkiliOrAdmin", policy => policy.RequireRole("SuperAdmin", "Yetkili"));
+    options.AddPolicy("YetkiliOrAbove", policy => policy.RequireRole("SuperAdmin", "Yetkili"));
 });
 
 // 5. Rate Limiting (Güvenlik Kuralı 2.5)
@@ -72,17 +76,8 @@ if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
 {
     builder.Services.AddRateLimiter(options =>
     {
-        // Login için kısıtlı politika (IP bazlı)
-        options.AddPolicy("LoginPolicy", httpContext =>
-            RateLimitPartition.GetFixedWindowLimiter(
-                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
-                factory: partition => new FixedWindowRateLimiterOptions
-                {
-                    AutoReplenishment = true,
-                    PermitLimit = 5,
-                    QueueLimit = 0,
-                    Window = TimeSpan.FromMinutes(1)
-                }));
+        // Login için kısıtlı politika (Username + IP bazlı)
+        options.AddPolicy<string, Kilavuz.Web.Infrastructure.Security.LoginRateLimiterPolicy>("LoginPolicy");
 
         // Genel kullanım için politika (IP bazlı)
         options.AddPolicy("GlobalPolicy", httpContext =>
@@ -122,6 +117,20 @@ app.UseRouting();
 // Rate Limiter Routing'den sonra, Auth'dan önce çağrılmalıdır
 if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
 {
+    // Form data asenkron okumak için küçük bir middleware (LoginRateLimiterPolicy senkron çalıştığı için)
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/Panel/Auth/Login" && HttpMethods.IsPost(context.Request.Method) && context.Request.HasFormContentType)
+        {
+            var form = await context.Request.ReadFormAsync();
+            if (form.TryGetValue("Username", out var usernameValue))
+            {
+                context.Items["LoginUsername"] = usernameValue.ToString();
+            }
+        }
+        await next();
+    });
+
     app.UseRateLimiter();
 }
 

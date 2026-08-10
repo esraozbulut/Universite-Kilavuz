@@ -1,8 +1,7 @@
 using Dapper;
 using Kilavuz.Web.Domain.Entities;
 using Kilavuz.Web.Domain.Interfaces;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+using Kilavuz.Web.Application.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,20 +11,20 @@ namespace Kilavuz.Web.Data
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class, IEntity
     {
-        private readonly IConfiguration _configuration;
+        private readonly IDbConnectionFactory _connectionFactory;
         private readonly string _tableName;
 
-        public GenericRepository(IConfiguration configuration)
+        public GenericRepository(IDbConnectionFactory connectionFactory)
         {
-            _configuration = configuration;
+            _connectionFactory = connectionFactory;
             // Varsayılan olarak sınıf adının sonuna 's' ekliyoruz, veritabanına uyum için
             _tableName = typeof(T).Name + "s";
             if (_tableName == "Categorys") _tableName = "Categories";
         }
 
-        private SqlConnection GetConnection()
+        private System.Data.IDbConnection GetConnection()
         {
-            return new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            return _connectionFactory.CreateConnection();
         }
 
         public async Task<T> GetByIdAsync(int id)

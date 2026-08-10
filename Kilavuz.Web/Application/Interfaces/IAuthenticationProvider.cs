@@ -8,6 +8,7 @@ public class AuthenticationResult
     public bool IsSuccess { get; set; }
     public string Message { get; set; } = string.Empty;
     public User? User { get; set; }
+    public System.Collections.Generic.IEnumerable<string> Roles { get; set; } = System.Array.Empty<string>();
 }
 
 public interface IAuthenticationProvider

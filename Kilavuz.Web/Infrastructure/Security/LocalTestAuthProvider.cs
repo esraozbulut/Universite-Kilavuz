@@ -4,18 +4,21 @@ using Microsoft.AspNetCore.Identity;
 using Kilavuz.Web.Application.Interfaces;
 using Kilavuz.Web.Data;
 using Kilavuz.Web.Domain.Entities;
+using Dapper;
 
 namespace Kilavuz.Web.Infrastructure.Security;
 
 public class LocalTestAuthProvider : IAuthenticationProvider
 {
     private readonly IGenericRepository<User> _userRepository;
+    private readonly IDbConnectionFactory _connectionFactory;
     private readonly PasswordHasher<User> _passwordHasher;
     private const string GenericErrorMessage = "Kullanıcı adı veya şifre hatalı.";
 
-    public LocalTestAuthProvider(IGenericRepository<User> userRepository)
+    public LocalTestAuthProvider(IGenericRepository<User> userRepository, IDbConnectionFactory connectionFactory)
     {
         _userRepository = userRepository;
+        _connectionFactory = connectionFactory;
         _passwordHasher = new PasswordHasher<User>();
     }
 
@@ -45,12 +48,19 @@ public class LocalTestAuthProvider : IAuthenticationProvider
             return new AuthenticationResult { IsSuccess = false, Message = GenericErrorMessage };
         }
 
-        // 5. Success
+        // 5. Fetch Roles
+        using var connection = _connectionFactory.CreateConnection();
+        var roles = await connection.QueryAsync<string>(
+            "SELECT r.Name FROM Roles r INNER JOIN UserRoles ur ON r.Id = ur.RoleId WHERE ur.UserId = @UserId",
+            new { UserId = user.Id });
+
+        // 6. Success
         return new AuthenticationResult 
         { 
             IsSuccess = true, 
             Message = "Giriş başarılı.", 
-            User = user 
+            User = user,
+            Roles = roles
         };
     }
 
