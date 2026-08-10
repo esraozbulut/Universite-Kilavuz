@@ -21,6 +21,12 @@
             <li class="active">
                 <a href="#"><i class="fa fa-th-large"></i> <span class="nav-label">Gösterge Paneli</span></a>
             </li>
+            @if (User.IsInRole("SuperAdmin"))
+            {
+                <li>
+                    <a href="@Url.Action("Index", "User", new { area = "Panel" })"><i class="fa fa-users"></i> <span class="nav-label">Kullanıcı Yönetimi</span></a>
+                </li>
+            }
             <li>
                 <a href="#"><i class="fa fa-cubes"></i> <span class="nav-label">Uygulamalar</span></a>
             </li>

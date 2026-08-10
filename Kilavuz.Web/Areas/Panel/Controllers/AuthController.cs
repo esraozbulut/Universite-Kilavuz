@@ -158,7 +158,7 @@ public class AuthController : Controller
         }
         else
         {
-            return RedirectToAction("Index", "Home", new { area = "Panel" });
+            return RedirectToAction("Index", "User", new { area = "Panel" });
         }
     }
 }
