@@ -8,16 +8,16 @@
 
 ## Son Güncelleme
 
-- **Tarih:** 2026-08-07
+- **Tarih:** 2026-08-10
 - **Güncelleyen:** Gemini Oturumu
 
 ---
 
 ## Genel Durum Özeti
 
-**Şu an aktif faz:** Faz 6 — Kimlik Doğrulama ve Yetkilendirme (Devam Ediyor)
+**Şu an aktif faz:** Faz 7 — Panel Modülleri (Beklemede)
 
-**Sıradaki somut adım:** Faz 6 kapsamında Login Controller yazılması, login görünümünün oluşturulması ve Cookie tabanlı Authentication/Authorization middleware konfigürasyonlarının yapılması.
+**Sıradaki somut adım:** Faz 7 kapsamında Süper Admin için Kullanıcı/Rol görüntüleme temel sayfasının hazırlanması.
 
 ---
 
@@ -31,7 +31,7 @@
 | 3 | Data Katmanı (Dapper + Generic Repository) | ✅ Tamamlandı | GenericRepository test edildi ve PRD uyumu onaylandı. |
 | 4 | Application Katmanı (Generic Service) | ✅ Tamamlandı | IResourceOwnershipPolicy ve IReorderService entegre edildi, rol bazlı yetkiler doğrulandı. |
 | 5 | Infrastructure Katmanı | ✅ Tamamlandı | 6/6 alt-adım tamamlandı: Serilog, CAPTCHA, Rate Limiting, FileStorage, HtmlSanitizer, AuthenticationProvider |
-| 6 | Kimlik Doğrulama ve Yetkilendirme | 🔄 Devam Ediyor | |
+| 6 | Kimlik Doğrulama ve Yetkilendirme | ✅ Tamamlandı | Rate Limiting - Kullanıcı Adı Değiştirerek Atlatma: LoginPolicy (kullanıcı+IP bazlı) tek başına, saldırganın farklı kullanıcı adları deneyerek limiti atlatmasını engellemez; GlobalPolicy (IP bazlı, 100/dakika) bir üst sınır sağlar ama bu gevşek bir eşik. Faz 9 (Güvenlik Sıkılaştırma) sırasında login formu için daha sıkı bir IP-only üst limit (ör. dakikada 20) eklenmesi değerlendirilmeli. |
 | 7 | Panel Modülleri | ⬜ Beklemede | |
 | 8 | UI (Public) Modülleri | ⬜ Beklemede | |
 | 9 | Güvenlik Sıkılaştırma ve Doğrulama | ⬜ Beklemede | |
