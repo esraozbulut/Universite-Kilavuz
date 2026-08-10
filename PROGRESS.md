@@ -45,7 +45,9 @@
 
 *(Faz 7 birden fazla alt adımdan oluştuğu için ayrıca takip edilir — bkz. `WORKFLOW.md` Faz 7)*
 
-- [ ] Kullanıcı/Rol görüntüleme (temel)
+> **Geçici Not (Faz 7 - Adım 1):** Panel dashboard/anasayfa henüz yok, login sonrası varsayılan yönlendirme (RedirectToLocal) geçici olarak User/Index'e ayarlandı. Gerçek dashboard geldiğinde güncellenecek.
+
+- [x] Kullanıcı/Rol görüntüleme (temel)
 - [ ] Uygulama Yönetimi (CRUD + sıralama + erişim tipi)
 - [ ] Kategori Yönetimi (CRUD + sıralama)
 - [ ] Sayfa Yönetimi (CRUD + Rich Text + dosya/görsel yükleme + sıralama + erişim tipi)
