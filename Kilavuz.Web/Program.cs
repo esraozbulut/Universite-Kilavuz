@@ -10,8 +10,16 @@ using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Kilavuz.Web.Application.Services;
+using Kilavuz.Web.Domain.Enums;
+using Kilavuz.Web.Data.TypeHandlers;
+using Dapper;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Dapper Type Handlers (Enum <-> String dönüşümleri için)
+SqlMapper.AddTypeHandler(new DapperEnumAsStringHandler<AccessType>());
+SqlMapper.AddTypeHandler(new DapperEnumAsStringHandler<ContentType>());
+SqlMapper.AddTypeHandler(new DapperEnumAsStringHandler<UserRoleType>());
 
 // 1. Serilog Konfigürasyonu
 builder.Services.AddHttpContextAccessor();

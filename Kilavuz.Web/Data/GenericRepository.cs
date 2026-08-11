@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.Data;
 
 namespace Kilavuz.Web.Data
 {
@@ -50,8 +51,22 @@ namespace Kilavuz.Web.Data
             var columns = string.Join(",", properties.Select(p => p.Name));
             var parameters = string.Join(",", properties.Select(p => "@" + p.Name));
 
+            var dapperParams = new DynamicParameters();
+            foreach (var p in properties)
+            {
+                var val = p.GetValue(entity);
+                if (p.PropertyType.IsEnum)
+                {
+                    dapperParams.Add("@" + p.Name, val?.ToString(), DbType.String);
+                }
+                else
+                {
+                    dapperParams.Add("@" + p.Name, val);
+                }
+            }
+
             var query = $"INSERT INTO {_tableName} ({columns}) OUTPUT INSERTED.Id VALUES ({parameters})";
-            return await connection.QuerySingleAsync<int>(query, entity);
+            return await connection.QuerySingleAsync<int>(query, dapperParams);
         }
 
         public async Task<bool> UpdateAsync(T entity)
@@ -60,8 +75,23 @@ namespace Kilavuz.Web.Data
             var properties = typeof(T).GetProperties().Where(p => p.Name != "Id" && p.Name != "CreatedAt");
             var setClause = string.Join(",", properties.Select(p => $"{p.Name} = @{p.Name}"));
 
+            var dapperParams = new DynamicParameters();
+            dapperParams.Add("@Id", entity.Id);
+            foreach (var p in properties)
+            {
+                var val = p.GetValue(entity);
+                if (p.PropertyType.IsEnum)
+                {
+                    dapperParams.Add("@" + p.Name, val?.ToString(), DbType.String);
+                }
+                else
+                {
+                    dapperParams.Add("@" + p.Name, val);
+                }
+            }
+
             var query = $"UPDATE {_tableName} SET {setClause} WHERE Id = @Id";
-            var result = await connection.ExecuteAsync(query, entity);
+            var result = await connection.ExecuteAsync(query, dapperParams);
             return result > 0;
         }
 
@@ -97,6 +127,19 @@ namespace Kilavuz.Web.Data
             var query = $"UPDATE {_tableName} SET SortOrder = @SortOrder WHERE Id = @Id";
             var result = await connection.ExecuteAsync(query, new { Id = id, SortOrder = newSortOrder });
             return result > 0;
+        }
+
+        public async Task<int> GetNextSortOrderAsync()
+        {
+            if (!typeof(IOrderable).IsAssignableFrom(typeof(T))) return 0;
+
+            using var connection = GetConnection();
+            var hasSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(typeof(T));
+            
+            var query = $"SELECT ISNULL(MAX(SortOrder), 0) + 1 FROM {_tableName}" + 
+                        (hasSoftDelete ? " WHERE IsDeleted = 0" : "");
+                        
+            return await connection.ExecuteScalarAsync<int>(query);
         }
     }
 }
