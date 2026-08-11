@@ -42,6 +42,11 @@ namespace Kilavuz.Web.Application
                 auditableEntity.CreatedAt = DateTime.UtcNow;
             }
 
+            if (entity is IOrderable orderableEntity && orderableEntity.SortOrder == 0)
+            {
+                orderableEntity.SortOrder = await _repository.GetNextSortOrderAsync();
+            }
+
             var result = await _repository.InsertAsync(entity);
             return ServiceResult<int>.Success(result, "Kayıt başarıyla oluşturuldu.");
         }
