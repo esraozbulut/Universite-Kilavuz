@@ -46,6 +46,7 @@
 *(Faz 7 birden fazla alt adımdan oluştuğu için ayrıca takip edilir — bkz. `WORKFLOW.md` Faz 7)*
 
 > **Geçici Not (Faz 7 - Adım 1):** Panel dashboard/anasayfa henüz yok, login sonrası varsayılan yönlendirme (RedirectToLocal) geçici olarak User/Index'e ayarlandı. Gerçek dashboard geldiğinde güncellenecek.
+> **Not:** `GenericService.CreateAsync` içerisindeki otomatik `SortOrder` ataması (`SortOrder == 0` ise) yalnızca formda `SortOrder` alanı yokken güvenlidir. İleride "listenin başına ekle" gibi bir özellik eklenirse (ör. formdan özel bir sıra girildiğinde veya bilerek 0/1 istenirse) bu mantık gözden geçirilmelidir.
 
 - [x] Kullanıcı/Rol görüntüleme (temel)
 - [ ] Uygulama Yönetimi (CRUD + sıralama + erişim tipi)
