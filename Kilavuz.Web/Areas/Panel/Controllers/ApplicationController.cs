@@ -43,12 +43,7 @@ public class ApplicationController : Controller
 
         var apps = result.Data.OrderBy(a => a.SortOrder).ToList();
 
-        // Eğer Yetkili ise, sadece kendi oluşturduğu uygulamaları görsün
-        if (User.IsInRole("Yetkili"))
-        {
-            var currentUserId = GetCurrentUserId();
-            apps = apps.Where(a => a.CreatedByUserId == currentUserId).ToList();
-        }
+        // Tüm listeyi görüntüleme izni (SuperAdmin ve Yetkili için aynı)
 
         return View(apps);
     }
@@ -160,11 +155,6 @@ public class ApplicationController : Controller
     {
         var result = await _applicationService.GetAllAsync();
         var apps = result.Data.OrderBy(a => a.SortOrder).ToList();
-        
-        if (User.IsInRole("Yetkili"))
-        {
-            apps = apps.Where(a => a.CreatedByUserId == GetCurrentUserId()).ToList();
-        }
 
         var currentIndex = apps.FindIndex(a => a.Id == id);
         if (currentIndex > 0)
@@ -198,11 +188,6 @@ public class ApplicationController : Controller
     {
         var result = await _applicationService.GetAllAsync();
         var apps = result.Data.OrderBy(a => a.SortOrder).ToList();
-        
-        if (User.IsInRole("Yetkili"))
-        {
-            apps = apps.Where(a => a.CreatedByUserId == GetCurrentUserId()).ToList();
-        }
 
         var currentIndex = apps.FindIndex(a => a.Id == id);
         if (currentIndex >= 0 && currentIndex < apps.Count - 1)

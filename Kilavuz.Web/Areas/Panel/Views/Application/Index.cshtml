@@ -2,6 +2,8 @@
 @model IEnumerable<Application>
 @{
     ViewData["Title"] = "Uygulama Yönetimi";
+    var currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+    var isSuperAdmin = User.IsInRole("SuperAdmin");
 }
 
 <div class="row">
@@ -60,19 +62,39 @@
                                         <span class="label label-danger">Pasif</span>
                                     }
                                 </td>
+                                @{
+                                    var canModify = isSuperAdmin || item.CreatedByUserId == currentUserId;
+                                }
                                 <td>
-                                    <form asp-action="MoveUp" asp-route-id="@item.Id" method="post" style="display:inline;">
-                                        <button type="submit" class="btn btn-white btn-sm" title="Yukarı Taşı"><i class="fa fa-arrow-up"></i></button>
-                                    </form>
-                                    <form asp-action="MoveDown" asp-route-id="@item.Id" method="post" style="display:inline;">
-                                        <button type="submit" class="btn btn-white btn-sm" title="Aşağı Taşı"><i class="fa fa-arrow-down"></i></button>
-                                    </form>
+                                    @if (canModify)
+                                    {
+                                        <form asp-action="MoveUp" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-white btn-sm" title="Yukarı Taşı"><i class="fa fa-arrow-up"></i></button>
+                                        </form>
+                                        <form asp-action="MoveDown" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-white btn-sm" title="Aşağı Taşı"><i class="fa fa-arrow-down"></i></button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-white btn-sm" disabled title="Yalnızca sahibi sıralayabilir"><i class="fa fa-arrow-up"></i></button>
+                                        <button class="btn btn-white btn-sm" disabled title="Yalnızca sahibi sıralayabilir"><i class="fa fa-arrow-down"></i></button>
+                                    }
                                 </td>
                                 <td>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Düzenle</a>
-                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" class="delete-form">
-                                        <button type="button" class="btn btn-danger btn-sm delete-btn">Sil</button>
-                                    </form>
+                                    <a asp-controller="Category" asp-action="Index" asp-route-applicationId="@item.Id" class="btn btn-info btn-sm">Kategorileri Yönet</a>
+                                    @if (canModify)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Düzenle</a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" class="delete-form">
+                                            <button type="button" class="btn btn-danger btn-sm delete-btn">Sil</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-warning btn-sm" disabled title="Yalnızca sahibi düzenliyebilir"><i class="fa fa-lock"></i> Düzenle</button>
+                                        <button class="btn btn-danger btn-sm" disabled title="Yalnızca sahibi silebilir"><i class="fa fa-lock"></i> Sil</button>
+                                    }
                                 </td>
                             </tr>
                         }

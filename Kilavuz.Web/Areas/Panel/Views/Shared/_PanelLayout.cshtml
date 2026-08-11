@@ -23,8 +23,8 @@
                     <li class="nav-header">
                         <div class="dropdown profile-element">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                                <span class="block m-t-xs font-bold">Yönetici</span>
-                                <span class="text-muted text-xs block">Panel Yetkilisi</span>
+                                <span class="block m-t-xs font-bold">@(User.Identity?.Name ?? "Kullanıcı")</span>
+                                <span class="text-muted text-xs block">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Yetkisiz")</span>
                             </a>
                         </div>
                         <div class="logo-element">KLV</div>
@@ -33,7 +33,7 @@
                         <a href="/Panel/Home"><i class="fa fa-dashboard"></i> <span class="nav-label">Gösterge Paneli</span></a>
                     </li>
                     <li>
-                        <a href="/Panel/Applications"><i class="fa fa-cubes"></i> <span class="nav-label">Uygulamalar</span></a>
+                        <a href="/Panel/Application"><i class="fa fa-cubes"></i> <span class="nav-label">Uygulamalar</span></a>
                     </li>
                     <li>
                         <a href="/Panel/Categories"><i class="fa fa-tags"></i> <span class="nav-label">Kategoriler</span></a>
@@ -53,7 +53,8 @@
                     </div>
                     <ul class="nav navbar-top-links navbar-right">
                         <li>
-                            <a href="/Panel/Auth/Logout"><i class="fa fa-sign-out"></i> Çıkış Yap</a>
+                            <form id="logoutForm" asp-area="Panel" asp-controller="Auth" asp-action="Logout" method="post" style="display: none;"></form>
+                            <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;"><i class="fa fa-sign-out"></i> Çıkış Yap</a>
                         </li>
                     </ul>
                 </nav>
@@ -96,5 +97,25 @@
     <script src="~/js/plugins/toastr/toastr.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        $(document).ready(function() {
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "5000"
+            };
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>toastr.success(@Html.Raw(Json.Serialize(TempData["SuccessMessage"])));</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>toastr.error(@Html.Raw(Json.Serialize(TempData["ErrorMessage"])));</text>
+            }
+        });
+    </script>
 </body>
 </html>
