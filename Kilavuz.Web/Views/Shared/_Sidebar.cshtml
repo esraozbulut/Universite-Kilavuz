@@ -21,6 +21,13 @@
             <li class="active">
                 <a href="#"><i class="fa fa-th-large"></i> <span class="nav-label">Gösterge Paneli</span></a>
             </li>
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Yetkili"))
+            {
+                <li class="@(Context.Request.Path.StartsWithSegments("/Panel/Application") ? "active" : "")">
+                    <a asp-area="Panel" asp-controller="Application" asp-action="Index"><i class="fa fa-cubes"></i> <span class="nav-label">Uygulama Yönetimi</span></a>
+                </li>
+            }
+
             @if (User.IsInRole("SuperAdmin"))
             {
                 <li>
