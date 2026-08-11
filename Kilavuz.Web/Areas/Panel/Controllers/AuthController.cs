@@ -119,7 +119,7 @@ public class AuthController : Controller
 
         _logger.Information("Başarılı giriş. Kullanıcı Adı: {Username}", result.User.UserName);
 
-        return RedirectToLocal(model.ReturnUrl);
+        return RedirectToLocal(model.ReturnUrl, result.Roles);
     }
 
     [HttpPost]
@@ -130,6 +130,12 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         _logger.Information("Kullanıcı çıkış yaptı. Kullanıcı Adı: {Username}", User.Identity?.Name);
         return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
     }
 
     [HttpGet]
@@ -150,7 +156,7 @@ public class AuthController : Controller
         return File(captchaResult.ImageBytes, "image/png");
     }
 
-    private IActionResult RedirectToLocal(string? returnUrl)
+    private IActionResult RedirectToLocal(string? returnUrl, IEnumerable<string>? roles = null)
     {
         if (Url.IsLocalUrl(returnUrl))
         {
@@ -158,6 +164,10 @@ public class AuthController : Controller
         }
         else
         {
+            if (roles != null && roles.Contains("Yetkili"))
+            {
+                return RedirectToAction("Index", "Application", new { area = "Panel" });
+            }
             return RedirectToAction("Index", "User", new { area = "Panel" });
         }
     }
