@@ -36,12 +36,34 @@ namespace Kilavuz.Web.Data
             return await connection.QuerySingleOrDefaultAsync<T>(query, new { Id = id });
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync(object? filter = null)
         {
             using var connection = GetConnection();
             var hasSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(typeof(T));
-            var query = $"SELECT * FROM {_tableName}" + (hasSoftDelete ? " WHERE IsDeleted = 0" : "");
-            return await connection.QueryAsync<T>(query);
+            
+            var query = $"SELECT * FROM {_tableName}";
+            var conditions = new List<string>();
+            
+            if (hasSoftDelete)
+            {
+                conditions.Add("IsDeleted = 0");
+            }
+            
+            if (filter != null)
+            {
+                var filterProperties = filter.GetType().GetProperties();
+                foreach (var prop in filterProperties)
+                {
+                    conditions.Add($"{prop.Name} = @{prop.Name}");
+                }
+            }
+            
+            if (conditions.Any())
+            {
+                query += " WHERE " + string.Join(" AND ", conditions);
+            }
+            
+            return await connection.QueryAsync<T>(query, filter);
         }
 
         public async Task<int> InsertAsync(T entity)
@@ -129,17 +151,36 @@ namespace Kilavuz.Web.Data
             return result > 0;
         }
 
-        public async Task<int> GetNextSortOrderAsync()
+        public async Task<int> GetNextSortOrderAsync(object? filter = null)
         {
             if (!typeof(IOrderable).IsAssignableFrom(typeof(T))) return 0;
 
             using var connection = GetConnection();
             var hasSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(typeof(T));
             
-            var query = $"SELECT ISNULL(MAX(SortOrder), 0) + 1 FROM {_tableName}" + 
-                        (hasSoftDelete ? " WHERE IsDeleted = 0" : "");
+            var query = $"SELECT ISNULL(MAX(SortOrder), 0) + 1 FROM {_tableName}";
+            var conditions = new List<string>();
+            
+            if (hasSoftDelete)
+            {
+                conditions.Add("IsDeleted = 0");
+            }
+            
+            if (filter != null)
+            {
+                var filterProperties = filter.GetType().GetProperties();
+                foreach (var prop in filterProperties)
+                {
+                    conditions.Add($"{prop.Name} = @{prop.Name}");
+                }
+            }
+            
+            if (conditions.Any())
+            {
+                query += " WHERE " + string.Join(" AND ", conditions);
+            }
                         
-            return await connection.ExecuteScalarAsync<int>(query);
+            return await connection.ExecuteScalarAsync<int>(query, filter);
         }
     }
 }

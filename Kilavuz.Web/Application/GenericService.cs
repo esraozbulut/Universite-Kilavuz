@@ -18,9 +18,9 @@ namespace Kilavuz.Web.Application
             _policy = policy;
         }
 
-        public async Task<ServiceResult<IEnumerable<T>>> GetAllAsync()
+        public async Task<ServiceResult<IEnumerable<T>>> GetAllAsync(object? filter = null)
         {
-            var data = await _repository.GetAllAsync();
+            var data = await _repository.GetAllAsync(filter);
             return ServiceResult<IEnumerable<T>>.Success(data);
         }
 

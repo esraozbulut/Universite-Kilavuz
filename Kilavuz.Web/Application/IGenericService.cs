@@ -18,7 +18,7 @@ namespace Kilavuz.Web.Application
     public interface IGenericService<T> where T : class, IEntity
     {
         Task<ServiceResult<T>> GetByIdAsync(int id);
-        Task<ServiceResult<IEnumerable<T>>> GetAllAsync();
+        Task<ServiceResult<IEnumerable<T>>> GetAllAsync(object? filter = null);
         Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId, string currentUserRole);
         Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId, string currentUserRole);
         Task<ServiceResult<bool>> SoftDeleteAsync(int id, int currentUserId, string currentUserRole);

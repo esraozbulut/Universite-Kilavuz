@@ -1,0 +1,60 @@
+@model Kilavuz.Web.Domain.Entities.Category
+@{
+    ViewData["Title"] = "Yeni Kategori Ekle";
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="ibox ">
+            <div class="ibox-title">
+                <h5>Yeni Kategori Ekle</h5>
+            </div>
+            <div class="ibox-content">
+                <form asp-action="Create" method="post">
+                    <input type="hidden" asp-for="ApplicationId" />
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Ad</label>
+                        <div class="col-sm-10">
+                            <input asp-for="Name" class="form-control" required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Açıklama</label>
+                        <div class="col-sm-10">
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Durum</label>
+                        <div class="col-sm-10">
+                            <div class="i-checks">
+                                <label> <input asp-for="IsActive" type="checkbox"> <i></i> Aktif </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-4 col-sm-offset-2">
+                            <a asp-action="Index" asp-route-applicationId="@Model.ApplicationId" class="btn btn-white btn-sm">İptal</a>
+                            <button class="btn btn-primary btn-sm" type="submit">Kaydet</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
