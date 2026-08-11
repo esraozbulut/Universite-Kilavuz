@@ -45,12 +45,12 @@
 
 *(Faz 7 birden fazla alt adımdan oluştuğu için ayrıca takip edilir — bkz. `WORKFLOW.md` Faz 7)*
 
-> **Geçici Not (Faz 7 - Adım 1):** Panel dashboard/anasayfa henüz yok, login sonrası varsayılan yönlendirme (RedirectToLocal) geçici olarak User/Index'e ayarlandı. Gerçek dashboard geldiğinde güncellenecek.
+> **Geçici Not (Faz 7 - Adım 1):** Panel dashboard/anasayfa henüz yok, login sonrası varsayılan yönlendirme (RedirectToLocal) rol bazlı geçici yönlendirme (SuperAdmin -> User/Index, Yetkili -> Application/Index) şeklinde ayarlandı. Gerçek dashboard geldiğinde güncellenecek.
 > **Not:** `GenericService.CreateAsync` içerisindeki otomatik `SortOrder` ataması (`SortOrder == 0` ise) yalnızca formda `SortOrder` alanı yokken güvenlidir. İleride "listenin başına ekle" gibi bir özellik eklenirse (ör. formdan özel bir sıra girildiğinde veya bilerek 0/1 istenirse) bu mantık gözden geçirilmelidir.
 
 - [x] Kullanıcı/Rol görüntüleme (temel)
-- [ ] Uygulama Yönetimi (CRUD + sıralama + erişim tipi)
-- [ ] Kategori Yönetimi (CRUD + sıralama)
+- [x] Uygulama Yönetimi (CRUD + sıralama + erişim tipi)
+- [x] Kategori Yönetimi (CRUD + sıralama)
 - [ ] Sayfa Yönetimi (CRUD + Rich Text + dosya/görsel yükleme + sıralama + erişim tipi)
 - [ ] Erişim/İzin yönetimi ekranı
 - [ ] Log görüntüleme ekranı (Süper Admin)
@@ -77,6 +77,7 @@
 - **Hard Delete İptali:** Fiziksel silme (hard delete) işleminin standart CRUD'un bir parçası olmamasına ve generic repo/servislerden kaldırılarak açıkça `SoftDeleteAsync` kullanılmasına karar verildi. (2026-08-05)
 - **UserRoles Entity:** Dapper'ın junction tablolara eşlenmesi için `UserRole` ara tablosunun Domain katmanında C# entity'si olarak tutulmasına karar verildi. (2026-08-05)
 - Faz 5 sırasında Users tablosunda kaynağı belirsiz, şifresiz/rolsüz 3 test kaydı (test_sa, test_y1, test_y2) bulundu ve temizlendi - hiçbir oturumda bilerek oluşturulmadıkları teyit edildi, güvenlik riski taşımıyorlardı (geçersiz PasswordHash).
+- **Yetkili Görünürlük Netleştirmesi:** PRD 6.1'deki 'görür' ifadesi 'tüm içeriği görüntüleyebilir, yalnızca kendi oluşturduğunu yönetebilir (düzenle/sil/sırala)' olarak netleştirildi - başlangıçtaki katı yorum (yalnızca kendi içeriğini görme) kullanıcı deneyimi açısından yetersiz bulundu ve değiştirildi.
 
 ---
 
