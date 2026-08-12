@@ -47,11 +47,12 @@
 
 > **Geçici Not (Faz 7 - Adım 1):** Panel dashboard/anasayfa henüz yok, login sonrası varsayılan yönlendirme (RedirectToLocal) rol bazlı geçici yönlendirme (SuperAdmin -> User/Index, Yetkili -> Application/Index) şeklinde ayarlandı. Gerçek dashboard geldiğinde güncellenecek.
 > **Not:** `GenericService.CreateAsync` içerisindeki otomatik `SortOrder` ataması (`SortOrder == 0` ise) yalnızca formda `SortOrder` alanı yokken güvenlidir. İleride "listenin başına ekle" gibi bir özellik eklenirse (ör. formdan özel bir sıra girildiğinde veya bilerek 0/1 istenirse) bu mantık gözden geçirilmelidir.
+> **Bilinen Eksik (Faz 7 - Adım 4 / Bilerek Ertelenmiş):** `PageController.DownloadAttachment` şu an `[Authorize(Policy = "YetkiliOrAbove")]` koruması altında çalışıyor ancak `Restricted` erişim tipi kontrolü yok — Kısıtlı bir sayfanın ek dosyasına erişim iznine bakılmıyor. Bu kontrol, `ContentPermissions` tablosu ve izin mekanizması Faz 7 Adım 5'te tamamlandıktan sonra Faz 8 UI modülleriyle birlikte uygulanacak.
 
 - [x] Kullanıcı/Rol görüntüleme (temel)
 - [x] Uygulama Yönetimi (CRUD + sıralama + erişim tipi)
 - [x] Kategori Yönetimi (CRUD + sıralama)
-- [ ] Sayfa Yönetimi (CRUD + Rich Text + dosya/görsel yükleme + sıralama + erişim tipi)
+- [x] Sayfa Yönetimi (CRUD + Rich Text + dosya/görsel yükleme + sıralama + erişim tipi)
 - [ ] Erişim/İzin yönetimi ekranı
 - [ ] Log görüntüleme ekranı (Süper Admin)
 
