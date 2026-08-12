@@ -1,0 +1,210 @@
+@using Kilavuz.Web.Domain.Enums
+@model Kilavuz.Web.Areas.Panel.Models.ManagePermissionsViewModel
+@{
+    ViewData["Title"] = $"Erişim İzinleri — {Model.ContentName}";
+    var contentTypeLabel = Model.ContentType == ContentType.Application ? "Uygulama" : "Sayfa";
+    var backController = Model.ContentType == ContentType.Application ? "Application" : "Page";
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>
+                    <i class="fa fa-lock"></i>
+                    Erişim İzinleri —
+                    <span class="text-primary">@Model.ContentName</span>
+                    <small class="text-muted ml-1">(@contentTypeLabel)</small>
+                </h5>
+                <div class="ibox-tools">
+                    @if (Model.ContentType == ContentType.Application)
+                    {
+                        <a asp-controller="Application" asp-action="Index" class="btn btn-default btn-xs">
+                            <i class="fa fa-arrow-left"></i> Uygulamalara Dön
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Page" asp-action="Index" class="btn btn-default btn-xs">
+                            <i class="fa fa-arrow-left"></i> Sayfalar Listesine Dön
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="ibox-content">
+
+                @* ── Mevcut İzinler ──────────────────────────────────────────── *@
+                <h4>Mevcut Erişim İzinleri</h4>
+
+                @if (!Model.ExistingPermissions.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i>
+                        Bu içerik için henüz hiçbir kullanıcıya erişim izni verilmemiş.
+                        Bu içerik <strong>kısıtlı</strong> olduğundan, izin verilmeyen kullanıcılar erişemez.
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı</th>
+                                <th>Rolleri</th>
+                                <th>İzin Verilme Tarihi</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var perm in Model.ExistingPermissions)
+                            {
+                                <tr>
+                                    <td><i class="fa fa-user text-success"></i> @perm.UserName</td>
+                                    <td><small class="text-muted">@perm.Roles</small></td>
+                                    <td>@perm.GrantedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        <form asp-action="Revoke" asp-route-permissionId="@perm.Id"
+                                              method="post" style="display:inline;" class="revoke-form">
+                                            @Html.AntiForgeryToken()
+                                            <button type="button" class="btn btn-danger btn-xs revoke-btn">
+                                                <i class="fa fa-times"></i> Kaldır
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <hr />
+
+                @* ── Kullanıcı Ekle (Checkbox) ────────────────────────────────── *@
+                <h4>Kullanıcı İzinlerini Güncelle</h4>
+                <p class="text-muted small">
+                    <i class="fa fa-info-circle"></i>
+                    İşaretli kullanıcılar bu içeriğe erişebilir. "Kaydet" butonuna basıldığında
+                    <strong>tüm izinler sıfırlanır</strong> ve yalnızca işaretli kullanıcılara yeniden atanır.
+                </p>
+
+                @if (!Model.AllUsers.Any())
+                {
+                    <div class="alert alert-warning">Sistemde aktif kullanıcı bulunamadı.</div>
+                }
+                else
+                {
+                    <form asp-action="Grant" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="contentType" value="@Model.ContentType" />
+                        <input type="hidden" name="contentId" value="@Model.ContentId" />
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="40">Erişim</th>
+                                        <th>Kullanıcı</th>
+                                        <th>Rolleri</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in Model.AllUsers)
+                                    {
+                                        <tr class="@(user.IsGranted ? "success" : "")">
+                                            <td>
+                                                <input type="checkbox"
+                                                       name="userIds"
+                                                       value="@user.Id"
+                                                       @(user.IsGranted ? "checked" : "")
+                                                       class="permission-check" />
+                                            </td>
+                                            <td>
+                                                <label class="mb-0" style="font-weight: normal; cursor: pointer;">
+                                                    @user.UserName
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@user.Roles</small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="hr-line-dashed"></div>
+
+                        <button type="submit" class="btn btn-primary" id="savePermissionsBtn">
+                            <i class="fa fa-save"></i> Seçilen Kullanıcıları Kaydet
+                        </button>
+                        <span class="text-muted ml-2 small" id="selectedCount"></span>
+                    </form>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Seçili kullanıcı sayısını güncelle
+            function updateCount() {
+                var count = $('.permission-check:checked').length;
+                $('#selectedCount').text(count + ' kullanıcı seçili');
+            }
+
+            $('.permission-check').on('change', updateCount);
+            updateCount();
+
+            // Satıra tıklanınca checkbox toggle
+            $('table.table-hover tbody tr').on('click', function (e) {
+                if ($(e.target).is('input[type=checkbox]')) return;
+                var cb = $(this).find('.permission-check');
+                cb.prop('checked', !cb.prop('checked'));
+                $(this).toggleClass('success');
+                updateCount();
+            });
+
+            // Revoke (tek izin kaldırma) onayı
+            $('.revoke-btn').on('click', function () {
+                var form = $(this).closest('.revoke-form');
+                swal({
+                    title: "Emin misiniz?",
+                    text: "Bu kullanıcının erişim iznini kaldırmak istediğinize emin misiniz?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Evet, kaldır!",
+                    cancelButtonText: "Vazgeç",
+                    closeOnConfirm: false
+                }, function () {
+                    form.submit();
+                });
+            });
+
+            // Toplu kaydetme onayı
+            $('#savePermissionsBtn').on('click', function (e) {
+                e.preventDefault();
+                var count = $('.permission-check:checked').length;
+                var form = $(this).closest('form');
+                swal({
+                    title: "İzinleri güncelle?",
+                    text: count > 0
+                        ? count + " kullanıcıya erişim izni verilecek, mevcut izinler sıfırlanacak."
+                        : "Tüm erişim izinleri kaldırılacak. Hiçbir kullanıcı bu içeriğe erişemeyecek.",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: count > 0 ? "#1ab394" : "#DD6B55",
+                    confirmButtonText: "Evet, kaydet!",
+                    cancelButtonText: "Vazgeç",
+                    closeOnConfirm: false
+                }, function () {
+                    form.submit();
+                });
+            });
+        });
+    </script>
+}
