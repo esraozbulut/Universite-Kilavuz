@@ -1,0 +1,181 @@
+@model Kilavuz.Web.Areas.Panel.Models.LogViewModel
+@{
+    ViewData["Title"] = "Sistem Logları";
+}
+
+<div class="row mb-3">
+    <div class="col-lg-12">
+        <div class="ibox ">
+            <div class="ibox-title">
+                <h5>Log Filtreleme</h5>
+            </div>
+            <div class="ibox-content">
+                <form asp-action="Index" method="get" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label class="mr-2">Tarih Aralığı:</label>
+                        <input type="date" name="startDate" class="form-control" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                        <span class="mx-2">-</span>
+                        <input type="date" name="endDate" class="form-control" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    
+                    <div class="form-group mr-3">
+                        <label class="mr-2">Log Seviyesi:</label>
+                        <select name="level" class="form-control">
+                            <option value="">Tümü</option>
+                            @if(Model.Level == "Information") { <option value="Information" selected>Information</option> } else { <option value="Information">Information</option> }
+                            @if(Model.Level == "Warning") { <option value="Warning" selected>Warning</option> } else { <option value="Warning">Warning</option> }
+                            @if(Model.Level == "Error") { <option value="Error" selected>Error</option> } else { <option value="Error">Error</option> }
+                        </select>
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label class="mr-2">Kayıt Limiti:</label>
+                        <select name="topN" class="form-control">
+                            @if(Model.TopN == 100) { <option value="100" selected>Son 100</option> } else { <option value="100">Son 100</option> }
+                            @if(Model.TopN == 500) { <option value="500" selected>Son 500</option> } else { <option value="500">Son 500</option> }
+                            @if(Model.TopN == 1000) { <option value="1000" selected>Son 1000</option> } else { <option value="1000">Son 1000</option> }
+                            @if(Model.TopN == 5000) { <option value="5000" selected>Son 5000</option> } else { <option value="5000">Son 5000</option> }
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Filtrele</button>
+                    <a asp-action="Index" class="btn btn-default ml-2">Temizle</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="tabs-container">
+            <ul class="nav nav-tabs" role="tablist">
+                <li><a class="nav-link active" data-toggle="tab" href="#tab-audit"> İşlem Logları (Panel) <span class="badge badge-info">@Model.AuditLogs.Count</span></a></li>
+                <li><a class="nav-link" data-toggle="tab" href="#tab-error"> Hata Logları (Kılavuz UI) <span class="badge badge-danger">@Model.ErrorLogs.Count</span></a></li>
+            </ul>
+            <div class="tab-content">
+                
+                @* ── AUDIT LOGS TAB ─────────────────────────────────────────── *@
+                <div role="tabpanel" id="tab-audit" class="tab-pane active">
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover dataTables-logs">
+                                <thead>
+                                    <tr>
+                                        <th width="140">Zaman (UTC)</th>
+                                        <th width="80">Seviye</th>
+                                        <th>Kullanıcı</th>
+                                        <th>Mesaj</th>
+                                        <th>IP & Path</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var log in Model.AuditLogs)
+                                    {
+                                        <tr>
+                                            <td>@log.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                            <td>
+                                                @if (log.Level == "Error") { <span class="label label-danger">Error</span> }
+                                                else if (log.Level == "Warning") { <span class="label label-warning">Warning</span> }
+                                                else { <span class="label label-primary">Info</span> }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(log.UserName))
+                                                {
+                                                    <strong>@log.UserName</strong> <br/> <small class="text-muted">ID: @log.UserId</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @log.Message
+                                                @if (!string.IsNullOrEmpty(log.Exception))
+                                                {
+                                                    <br/>
+                                                    <small class="text-danger">@log.Exception</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    <i class="fa fa-sitemap"></i> @(log.IPAddress ?? "-") <br/>
+                                                    <i class="fa fa-link"></i> @(log.RequestPath ?? "-")
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @* ── ERROR LOGS TAB ─────────────────────────────────────────── *@
+                <div role="tabpanel" id="tab-error" class="tab-pane">
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover dataTables-logs">
+                                <thead>
+                                    <tr>
+                                        <th width="140">Zaman (UTC)</th>
+                                        <th>Mesaj</th>
+                                        <th>Path / IP</th>
+                                        <th>Stack Trace</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var log in Model.ErrorLogs)
+                                    {
+                                        <tr>
+                                            <td>@log.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                            <td><strong class="text-danger">@log.Message</strong></td>
+                                            <td>
+                                                <small>
+                                                    <i class="fa fa-link"></i> @(log.RequestPath ?? "-") <br/>
+                                                    <i class="fa fa-sitemap"></i> @(log.IPAddress ?? "-")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-xs btn-default" onclick="$(this).next('pre').toggle()">Göster/Gizle</button>
+                                                <pre style="display:none; font-size:10px; max-height:200px;">@log.StackTrace</pre>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+            $('.dataTables-logs').DataTable({
+                pageLength: 50,
+                responsive: true,
+                order: [[0, 'desc']], // Zaman'a göre azalan
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json',
+                },
+                dom: '<"html5buttons"B>lTfgitp',
+                buttons: [
+                    {extend: 'copy'},
+                    {extend: 'csv'},
+                    {extend: 'excel', title: 'SistemLoglari'},
+                    {extend: 'pdf', title: 'SistemLoglari'}
+                ]
+            });
+            
+            // Sekme değişiminde DataTables kolon genişliklerini yeniden hesapla (responsive bug'ını çözer)
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+            });
+        });
+    </script>
+}
