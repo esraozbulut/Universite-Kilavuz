@@ -53,7 +53,7 @@
 - [x] Uygulama Yönetimi (CRUD + sıralama + erişim tipi)
 - [x] Kategori Yönetimi (CRUD + sıralama)
 - [x] Sayfa Yönetimi (CRUD + Rich Text + dosya/görsel yükleme + sıralama + erişim tipi)
-- [ ] Erişim/İzin yönetimi ekranı
+- [x] Erişim/İzin yönetimi ekranı
 - [ ] Log görüntüleme ekranı (Süper Admin)
 
 ---
@@ -93,6 +93,7 @@
 - **Yetkili İzinleri Sınırlaması (Faz 7'ye ertelendi):** Yetkili rolündeki bir kullanıcı, `PageAttachment` ve `ContentPermission` gibi `IAuditable` olmayan (Yani `CreatedByUserId` tutmayan) kaynaklarda şu an hiçbir zaman değişiklik yapamıyor (varsayılan red); bu durum Faz 7'de (Panel modülleri) ele alınmalı. Örneğin `PageAttachment` için silme/ekleme izni verilirken üst `Page` entity'sinin sahipliği kontrol edilerek izin verilebilir.
 - **Rate Limiting Kullanıcı Adı Kısıtı (Faz 6'ya ertelendi):** Mevcut `LoginPolicy` IP bazlı partition kullanmaktadır. PRD 9.4'te belirtilen "Kullanıcı adı + IP bazlı" kısıtlama, Faz 6'da login formu yazılırken POST body'sinden kullanıcı adı okunarak eklenecektir.
 - **PageAttachment İndirme İşlemi (Faz 7'ye ertelendi):** Dosya yükleme sonucu dönen `RelativePath` alanı (ör. `/App_Data/Uploads/Attachments/...`) doğrudan URL/link olarak kullanılamaz (statik sunuma kapalıdır). Faz 7'de bir Controller action'ı (ör. `/Panel/Sayfa/DosyaIndir/{id}`) üzerinden dosyayı App_Data'dan okuyup FileStreamResult olarak dönen güvenli bir mekanizma yazılmalıdır.
+- **Departman/Grup Bazlı İzin Yönetimi (Planlanan Ek Özellik):** Kullanıcı bazlı ContentPermissions'a ek olarak, departman/grup bazlı erişim izni verilebilmesi isteniyor (ör. IT departmanı bir Restricted içeriğe toplu erişebilsin). Bu PRD.md'nin orijinal kapsamında YOKTU, sonradan eklenen bir gereksinim. Faz 7-10 (mevcut PRD/WORKFLOW kapsamı) tamamlandıktan SONRA, ayrı bir faz olarak ele alınacak. Gerektirecekleri: yeni Department entity/tablosu, User-Department ilişkisi, ContentPermissions tablosunun GranteeType (User/Department) ayrımı taşıyacak şekilde genişletilmesi, Faz 8'deki erişim kontrolü mantığının hem bireysel hem departman bazlı izni kontrol etmesi, PermissionController/Manage.cshtml'in güncellenmesi.
 
 ---
 

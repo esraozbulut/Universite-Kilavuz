@@ -317,6 +317,7 @@ public interface IGenericService<T> where T : class, IEntity
 - Bildirim merkezine e-posta entegrasyonu (Yetkili'ye onay/red bildirimleri).
 - Çoklu dil (i18n) desteğinin aktifleştirilmesi.
 - Panel logları için gelişmiş dashboard/analitik görünüm.
+- **Departman/grup bazlı erişim izni:** Kullanıcı bazlı ContentPermissions'a ek olarak (ör. IT departmanı toplu erişebilsin).
 - **Kurumsal kimlik doğrulama entegrasyonu:** `IAuthenticationProvider` soyutlaması üzerinden kurumun mail tabanlı sistemine (protokol/altyapı belirlendiğinde) bağlanacak gerçek `InstitutionalAuthProvider` implementasyonunun geliştirilmesi; bu aşamada `Users` tablosunun kurumsal veriyle nasıl senkronize/eşleştirileceği (ör. mail adresi üzerinden otomatik kullanıcı oluşturma) ayrıca tasarlanmalıdır.
 
 ---
