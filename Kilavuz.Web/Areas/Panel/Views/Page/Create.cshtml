@@ -1,0 +1,140 @@
+@using Kilavuz.Web.Domain.Entities
+@using Kilavuz.Web.Domain.Enums
+@model Page
+@{
+    ViewData["Title"] = "Yeni Sayfa Ekle";
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>Yeni Sayfa Ekle</h5>
+                <div class="ibox-tools">
+                    <a asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="btn btn-default btn-xs">
+                        <i class="fa fa-arrow-left"></i> Sayfalar Listesine Dön
+                    </a>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="CategoryId" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none;"></div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Başlık <span class="text-danger">*</span></label>
+                        <div class="col-sm-10">
+                            <input asp-for="Title" class="form-control" placeholder="Sayfa başlığını giriniz" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">İçerik</label>
+                        <div class="col-sm-10">
+                            <textarea id="contentEditor" asp-for="ContentHtml" class="form-control summernote-editor"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Kapak Görseli</label>
+                        <div class="col-sm-10">
+                            <input type="file" name="coverImage" class="form-control-file" accept=".jpg,.jpeg,.png,.gif" />
+                            <small class="form-text text-muted">İzin verilen formatlar: JPG, JPEG, PNG, GIF. Maksimum boyut: 10 MB.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Erişim Tipi</label>
+                        <div class="col-sm-10">
+                            <select asp-for="AccessType" class="form-control">
+                                <option value="@AccessType.Public">Herkese Açık</option>
+                                <option value="@AccessType.Restricted">Kısıtlı</option>
+                            </select>
+                            <small class="form-text text-muted">Kısıtlı seçilirse, erişim iznini Erişim Yönetimi ekranından ayarlayabilirsiniz.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Durum</label>
+                        <div class="col-sm-10 col-form-label">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" asp-for="IsActive" class="custom-control-input" id="isActiveCheck" />
+                                <label class="custom-control-label" for="isActiveCheck">Aktif (yayında)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hr-line-dashed"></div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-10 offset-sm-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-save"></i> Kaydet
+                            </button>
+                            <a asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="btn btn-default ml-1">Vazgeç</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/css/plugins/summernote/summernote.css" rel="stylesheet">
+}
+
+@section Scripts {
+    <script src="~/js/plugins/summernote/summernote.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            // Summernote başlatma — AJAX görsel yükleme ile
+            $('#contentEditor').summernote({
+                height: 400,
+                lang: 'tr-TR',
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'hr']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ],
+                callbacks: {
+                    onImageUpload: function (files) {
+                        for (var i = 0; i < files.length; i++) {
+                            uploadSummernoteImage(files[i], $(this));
+                        }
+                    }
+                }
+            });
+
+            // Summernote AJAX görsel yükleme fonksiyonu
+            function uploadSummernoteImage(file, editor) {
+                var formData = new FormData();
+                formData.append('file', file);
+                formData.append('__RequestVerificationToken', $('[name="__RequestVerificationToken"]').val());
+
+                $.ajax({
+                    url: '@Url.Action("UploadImage", "Page", new { area = "Panel" })',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        editor.summernote('insertImage', data.url);
+                    },
+                    error: function (xhr) {
+                        var msg = 'Görsel yüklenemedi.';
+                        try { msg = JSON.parse(xhr.responseText).error; } catch (e) { }
+                        toastr.error(msg);
+                    }
+                });
+            }
+        });
+    </script>
+}
