@@ -182,5 +182,14 @@ namespace Kilavuz.Web.Data
                         
             return await connection.ExecuteScalarAsync<int>(query, filter);
         }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            // Fiziksel silme — yalnızca ISoftDeletable olmayan entity'ler için kullanılmalı
+            using var connection = GetConnection();
+            var query = $"DELETE FROM {_tableName} WHERE Id = @Id";
+            var result = await connection.ExecuteAsync(query, new { Id = id });
+            return result > 0;
+        }
     }
 }

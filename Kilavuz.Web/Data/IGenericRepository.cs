@@ -14,5 +14,6 @@ namespace Kilavuz.Web.Data
         Task<bool> SoftDeleteAsync(int id, int deletedByUserId, string currentUserRole);
         Task<bool> ReorderAsync(int id, int newSortOrder);
         Task<int> GetNextSortOrderAsync(object? filter = null);
+        Task<bool> DeleteAsync(int id); // Fiziksel silme (ISoftDeletable olmayan entity'ler için)
     }
 }
