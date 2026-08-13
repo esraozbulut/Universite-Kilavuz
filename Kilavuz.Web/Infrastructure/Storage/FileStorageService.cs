@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Kilavuz.Web.Application.Interfaces;
 using Kilavuz.Web.Application.DTOs;
+using SkiaSharp;
 
 namespace Kilavuz.Web.Infrastructure.Storage;
 
@@ -15,8 +16,9 @@ public class FileStorageService : IFileStorageService
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
     
-    private readonly string[] _imageExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
-    private readonly string[] _attachmentExtensions = { ".pdf", ".docx", ".xlsx", ".zip", ".jpg", ".jpeg", ".png", ".gif" };
+    private readonly string[] _imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+    private readonly string[] _attachmentExtensions = { ".pdf", ".docx", ".xlsx", ".zip", ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+    private readonly string[] _contentFileExtensions = { ".pdf", ".docx", ".xlsx", ".pptx", ".csv" };
     
     public FileStorageService(IWebHostEnvironment env, IConfiguration config)
     {
@@ -26,15 +28,20 @@ public class FileStorageService : IFileStorageService
 
     public async Task<FileUploadResult> UploadImageAsync(IFormFile file)
     {
-        return await UploadFileInternalAsync(file, _imageExtensions, true);
+        return await UploadFileInternalAsync(file, _imageExtensions, "image");
     }
 
     public async Task<FileUploadResult> UploadAttachmentAsync(IFormFile file)
     {
-        return await UploadFileInternalAsync(file, _attachmentExtensions, false);
+        return await UploadFileInternalAsync(file, _attachmentExtensions, "attachment");
     }
 
-    private async Task<FileUploadResult> UploadFileInternalAsync(IFormFile file, string[] allowedExtensions, bool isImage)
+    public async Task<FileUploadResult> UploadContentFileAsync(IFormFile file)
+    {
+        return await UploadFileInternalAsync(file, _contentFileExtensions, "contentFile");
+    }
+
+    private async Task<FileUploadResult> UploadFileInternalAsync(IFormFile file, string[] allowedExtensions, string targetType)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("Dosya seçilmedi.");
@@ -56,23 +63,47 @@ public class FileStorageService : IFileStorageService
 
         // 3. MIME Type Check (Basic)
         var mimeType = file.ContentType.ToLowerInvariant();
-        if (isImage && !mimeType.StartsWith("image/"))
+        if (targetType == "image" && !mimeType.StartsWith("image/"))
             throw new ArgumentException("Geçersiz MIME tipi (Görsel bekleniyor).");
 
         // 4. Magic Number (File Signature) Check
         if (!FileSignatureChecker.IsValidSignature(file, extension))
             throw new ArgumentException("Dosya imzası (magic number) geçersiz. Uzantı ile dosya içeriği uyuşmuyor.");
 
+        // 4.5 Image validation (Decoding check)
+        if (targetType == "image")
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                using var bitmap = SKBitmap.Decode(stream);
+                if (bitmap == null || bitmap.Width == 0 || bitmap.Height == 0)
+                {
+                    throw new ArgumentException("Geçersiz veya bozuk görsel dosyası.");
+                }
+            }
+            catch
+            {
+                throw new ArgumentException("Geçersiz veya bozuk görsel dosyası.");
+            }
+        }
+
         // 5. GUID Naming & Save Path
         var storedFileName = Guid.NewGuid().ToString() + extension;
         string targetDirectory;
         string relativePath;
 
-        if (isImage)
+        if (targetType == "image")
         {
             // Images go to wwwroot/uploads/images
             targetDirectory = Path.Combine(_env.WebRootPath, "uploads", "images");
             relativePath = $"/uploads/images/{storedFileName}";
+        }
+        else if (targetType == "contentFile")
+        {
+            // Content files (documents) go to wwwroot/uploads/documents
+            targetDirectory = Path.Combine(_env.WebRootPath, "uploads", "documents");
+            relativePath = $"/uploads/documents/{storedFileName}";
         }
         else
         {

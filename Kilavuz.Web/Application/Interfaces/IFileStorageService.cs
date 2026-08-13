@@ -8,4 +8,5 @@ public interface IFileStorageService
 {
     Task<FileUploadResult> UploadImageAsync(IFormFile file);
     Task<FileUploadResult> UploadAttachmentAsync(IFormFile file);
+    Task<FileUploadResult> UploadContentFileAsync(IFormFile file);
 }

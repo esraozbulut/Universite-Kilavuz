@@ -36,16 +36,16 @@ else
     <div class="row">
         @foreach (var app in Model.Applications)
         {
-            <div class="col-md-4 col-sm-6 m-b-md">
-                <div class="ibox">
-                    <div class="ibox-content" style="position:relative">
+            <div class="col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
+                <div class="ibox w-100 mb-0">
+                    <div class="ibox-content d-flex flex-column h-100" style="position:relative">
                         @if (app.AccessType == AccessType.Restricted)
                         {
                             <span class="label label-warning" style="position:absolute; top:10px; right:10px;">
                                 <i class="fa fa-lock"></i> Kısıtlı
                             </span>
                         }
-                        <h3>
+                        <h3 class="mb-2">
                             @if (!string.IsNullOrEmpty(app.IconPath))
                             {
                                 <i class="fa @app.IconPath"></i>
@@ -56,13 +56,17 @@ else
                             }
                             @app.Name
                         </h3>
-                        @if (!string.IsNullOrEmpty(app.Description))
-                        {
-                            <p class="text-muted">@app.Description</p>
-                        }
-                        <a href="/kilavuz/@app.Id" class="btn btn-primary btn-sm m-t-sm">
-                            <i class="fa fa-arrow-right"></i> İncele
-                        </a>
+                        <div class="flex-grow-1 mb-2">
+                            @if (!string.IsNullOrEmpty(app.Description))
+                            {
+                                <p class="text-muted m-0">@app.Description</p>
+                            }
+                        </div>
+                        <div>
+                            <a href="/kilavuz/@app.Id" class="btn btn-primary btn-sm">
+                                <i class="fa fa-arrow-right"></i> İncele
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

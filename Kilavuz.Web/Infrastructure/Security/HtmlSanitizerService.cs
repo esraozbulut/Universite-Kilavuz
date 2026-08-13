@@ -17,13 +17,14 @@ public class HtmlSanitizerService : IHtmlSanitizerService
         _sanitizer.AllowedAttributes.Clear();
         _sanitizer.AllowedCssProperties.Clear(); // Can be added later if needed
 
-        // 2. White-listed Tags for Summernote / Rich Text
+        // 2. White-listed Tags for CKEditor / Rich Text
         var allowedTags = new[]
         {
             "p", "b", "i", "u", "strong", "em", "a", "ul", "ol", "li",
             "h1", "h2", "h3", "h4", "h5", "h6", "br", "hr", 
             "table", "thead", "tbody", "tr", "th", "td", 
-            "img", "span", "div", "blockquote", "pre", "code"
+            "img", "span", "div", "blockquote", "pre", "code",
+            "figure", "figcaption", "s"
         };
         foreach (var tag in allowedTags)
         {
@@ -33,7 +34,8 @@ public class HtmlSanitizerService : IHtmlSanitizerService
         // 3. White-listed Attributes
         var allowedAttributes = new[]
         {
-            "href", "src", "alt", "title", "class", "style", "target"
+            "href", "src", "alt", "title", "class", "style", "target", "rel",
+            "data-file-name", "data-file-type"
         };
         foreach (var attr in allowedAttributes)
         {
@@ -63,6 +65,22 @@ public class HtmlSanitizerService : IHtmlSanitizerService
         if (string.IsNullOrWhiteSpace(htmlContent))
             return htmlContent;
 
-        return _sanitizer.Sanitize(htmlContent);
+        var sanitizer = _sanitizer;
+
+        // Quill.js image-resize modülü (ve genel zengin metin) için ekstra izinler:
+        // width, height attributeları
+        sanitizer.AllowedAttributes.Add("width");
+        sanitizer.AllowedAttributes.Add("height");
+        
+        // CSS özellikleri
+        sanitizer.AllowedCssProperties.Add("float");
+        sanitizer.AllowedCssProperties.Add("width");
+        sanitizer.AllowedCssProperties.Add("height");
+        sanitizer.AllowedCssProperties.Add("margin");
+        sanitizer.AllowedCssProperties.Add("text-align");
+        sanitizer.AllowedCssProperties.Add("color");
+        sanitizer.AllowedCssProperties.Add("background-color");
+
+        return sanitizer.Sanitize(htmlContent);
     }
 }

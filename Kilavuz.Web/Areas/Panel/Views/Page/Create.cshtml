@@ -34,15 +34,7 @@
                     <div class="form-group row">
                         <label class="col-sm-2 col-form-label">İçerik</label>
                         <div class="col-sm-10">
-                            <textarea id="contentEditor" asp-for="ContentHtml" class="form-control summernote-editor"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-group row">
-                        <label class="col-sm-2 col-form-label">Kapak Görseli</label>
-                        <div class="col-sm-10">
-                            <input type="file" name="coverImage" class="form-control-file" accept=".jpg,.jpeg,.png,.gif" />
-                            <small class="form-text text-muted">İzin verilen formatlar: JPG, JPEG, PNG, GIF. Maksimum boyut: 10 MB.</small>
+                            <textarea id="contentEditor" asp-for="ContentHtml" class="form-control"></textarea>
                         </div>
                     </div>
 
@@ -84,57 +76,149 @@
 </div>
 
 @section Styles {
-    <link href="~/css/plugins/summernote/summernote.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/42.0.1/ckeditor5.css" />
+    <style>
+        .ck-editor__editable_inline {
+            min-height: 400px;
+        }
+    </style>
 }
 
 @section Scripts {
-    <script src="~/js/plugins/summernote/summernote.min.js"></script>
-    <script>
-        $(document).ready(function () {
-
-            // Summernote başlatma — AJAX görsel yükleme ile
-            $('#contentEditor').summernote({
-                height: 400,
-                lang: 'tr-TR',
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'italic', 'underline', 'clear']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'hr']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ],
-                callbacks: {
-                    onImageUpload: function (files) {
-                        for (var i = 0; i < files.length; i++) {
-                            uploadSummernoteImage(files[i], $(this));
-                        }
-                    }
-                }
-            });
-
-            // Summernote AJAX görsel yükleme fonksiyonu
-            function uploadSummernoteImage(file, editor) {
-                var formData = new FormData();
-                formData.append('file', file);
-                formData.append('__RequestVerificationToken', $('[name="__RequestVerificationToken"]').val());
-
-                $.ajax({
-                    url: '@Url.Action("UploadImage", "Page", new { area = "Panel" })',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (data) {
-                        editor.summernote('insertImage', data.url);
-                    },
-                    error: function (xhr) {
-                        var msg = 'Görsel yüklenemedi.';
-                        try { msg = JSON.parse(xhr.responseText).error; } catch (e) { }
-                        toastr.error(msg);
-                    }
-                });
+    <script type="importmap">
+        {
+            "imports": {
+                "ckeditor5": "https://cdn.ckeditor.com/ckeditor5/42.0.1/ckeditor5.js",
+                "ckeditor5/": "https://cdn.ckeditor.com/ckeditor5/42.0.1/"
             }
+        }
+    </script>
+    <script type="module">
+        import {
+            ClassicEditor,
+            Essentials,
+            Paragraph,
+            Heading,
+            Bold,
+            Italic,
+            Underline,
+            Strikethrough,
+            Font,
+            Alignment,
+            List,
+            TodoList,
+            Indent,
+            IndentBlock,
+            BlockQuote,
+            HorizontalLine,
+            Link,
+            Image,
+            ImageCaption,
+            ImageResize,
+            ImageStyle,
+            ImageToolbar,
+            ImageUpload,
+            Table,
+            TableToolbar,
+            SourceEditing
+        } from 'ckeditor5';
+        import translations from 'ckeditor5/translations/tr.js';
+        
+        import { ContentFilePlugin } from '/js/ckeditor/content-file-plugin.js';
+
+        // Custom plugin configuration variables
+        window.contentFileUploadUrl = '@Url.Action("UploadContentFile", "Page", new { area = "Panel" })';
+        window.pageCategoryId = '@Model.CategoryId';
+        window.pageId = null; // Create sayfasında sayfa ID henüz yoktur
+
+
+        class MyUploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+            }
+            upload() {
+                return this.loader.file
+                    .then(file => new Promise((resolve, reject) => {
+                        const data = new FormData();
+                        data.append('file', file);
+                        data.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                        $.ajax({
+                            url: '@Url.Action("UploadImage", "Page", new { area = "Panel" })',
+                            type: 'POST',
+                            data: data,
+                            processData: false,
+                            contentType: false,
+                            success: function (response) {
+                                resolve({ default: response.url });
+                            },
+                            error: function (xhr) {
+                                let msg = 'Yükleme başarısız';
+                                try {
+                                    const json = JSON.parse(xhr.responseText);
+                                    if (json.error && json.error.message) msg = json.error.message;
+                                    else if (json.error) msg = json.error;
+                                } catch(e) {}
+                                reject(msg);
+                            }
+                        });
+                    }));
+            }
+            abort() { }
+        }
+
+        function MyCustomUploadAdapterPlugin(editor) {
+            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                return new MyUploadAdapter(loader);
+            };
+        }
+
+        ClassicEditor.create(document.querySelector('#contentEditor'), {
+            plugins: [
+                Essentials, Paragraph, Heading, Bold, Italic, Underline, Strikethrough, 
+                Font, Alignment, List, TodoList, Indent, IndentBlock, BlockQuote, 
+                HorizontalLine, Link, Image, ImageCaption, ImageResize, ImageStyle, 
+                ImageToolbar, ImageUpload, Table, TableToolbar, SourceEditing, 
+                MyCustomUploadAdapterPlugin, ContentFilePlugin
+            ],
+            toolbar: {
+                items: [
+                    'undo', 'redo', '|',
+                    'heading', '|',
+                    'bold', 'italic', 'underline', 'strikethrough', '|',
+                    'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
+                    'alignment', '|',
+                    'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent', '|',
+                    'blockQuote', 'insertTable', 'horizontalLine', '|',
+                    'link', 'uploadImage', 'insertContentFile', '|',
+                    'sourceEditing'
+                ],
+                shouldNotGroupWhenFull: true
+            },
+            language: 'tr',
+            translations: [translations],
+            image: {
+                toolbar: [
+                    'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|',
+                    'toggleImageCaption', 'imageTextAlternative', '|',
+                    'resizeImage'
+                ]
+            },
+            table: {
+                contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
+            }
+        })
+        .then(editor => {
+            window.editor = editor;
+            
+            // Kaydetmeden önce textarea'yı kesin olarak güncelle
+            $('form').on('submit', function () {
+                var currentContent = editor.getData();
+                $('#contentEditor').val(currentContent);
+            });
+        })
+        .catch(error => {
+            console.error(error);
         });
     </script>
 }

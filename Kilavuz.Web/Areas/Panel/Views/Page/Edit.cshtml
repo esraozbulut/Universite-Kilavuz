@@ -24,7 +24,7 @@
                     <input type="hidden" asp-for="CategoryId" />
                     <input type="hidden" asp-for="SortOrder" />
                     <input type="hidden" asp-for="CreatedByUserId" />
-                    <input type="hidden" asp-for="CoverImagePath" id="currentCoverImagePath" />
+
 
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none;"></div>
 
@@ -40,23 +40,7 @@
                         <label class="col-sm-2 col-form-label">İçerik</label>
                         <div class="col-sm-10">
                             @* Sanitize edilmiş içerik — HtmlSanitizerService ile işlenmiş, Html.Raw kullanımı kasıtlı *@
-                            <textarea id="contentEditor" asp-for="ContentHtml" class="form-control summernote-editor">@Html.Raw(Model.ContentHtml)</textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-group row">
-                        <label class="col-sm-2 col-form-label">Kapak Görseli</label>
-                        <div class="col-sm-10">
-                            @if (!string.IsNullOrEmpty(Model.CoverImagePath))
-                            {
-                                <div class="mb-2">
-                                    <img src="@Model.CoverImagePath" alt="Mevcut kapak görseli" style="max-height: 150px; max-width: 300px; border: 1px solid #ddd; padding: 4px;" />
-                                    <p class="text-muted small mt-1">Mevcut kapak görseli. Yeni bir görsel seçerseniz bu görsel değiştirilir.</p>
-                                </div>
-                            }
-                            <input type="file" name="coverImage" class="form-control-file" accept=".jpg,.jpeg,.png,.gif" />
-                            <small class="form-text text-muted">İzin verilen formatlar: JPG, JPEG, PNG, GIF. Maksimum boyut: 10 MB.</small>
-                            <span asp-validation-for="CoverImagePath" class="text-danger"></span>
+                            <textarea id="contentEditor" asp-for="ContentHtml" class="form-control">@Html.Raw(Model.ContentHtml)</textarea>
                         </div>
                     </div>
 
@@ -162,74 +146,172 @@
 </div>
 
 @section Styles {
-    <link href="~/css/plugins/summernote/summernote.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/42.0.1/ckeditor5.css" />
+    <style>
+        .ck-editor__editable_inline {
+            min-height: 400px;
+        }
+    </style>
 }
 
 @section Scripts {
-    <script src="~/js/plugins/summernote/summernote.min.js"></script>
-    <script>
-        $(document).ready(function () {
-
-            // Summernote başlatma — AJAX görsel yükleme ile
-            $('#contentEditor').summernote({
-                height: 400,
-                lang: 'tr-TR',
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'italic', 'underline', 'clear']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'hr']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ],
-                callbacks: {
-                    onImageUpload: function (files) {
-                        for (var i = 0; i < files.length; i++) {
-                            uploadSummernoteImage(files[i], $(this));
-                        }
-                    }
-                }
-            });
-
-            // Summernote AJAX görsel yükleme fonksiyonu
-            function uploadSummernoteImage(file, editor) {
-                var formData = new FormData();
-                formData.append('file', file);
-                formData.append('__RequestVerificationToken', $('[name="__RequestVerificationToken"]').val());
-
-                $.ajax({
-                    url: '@Url.Action("UploadImage", "Page", new { area = "Panel" })',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (data) {
-                        editor.summernote('insertImage', data.url);
-                    },
-                    error: function (xhr) {
-                        var msg = 'Görsel yüklenemedi.';
-                        try { msg = JSON.parse(xhr.responseText).error; } catch (e) { }
-                        toastr.error(msg);
-                    }
-                });
+    <script type="importmap">
+        {
+            "imports": {
+                "ckeditor5": "https://cdn.ckeditor.com/ckeditor5/42.0.1/ckeditor5.js",
+                "ckeditor5/": "https://cdn.ckeditor.com/ckeditor5/42.0.1/"
             }
+        }
+    </script>
+    <script type="module">
+        import {
+            ClassicEditor,
+            Essentials,
+            Paragraph,
+            Heading,
+            Bold,
+            Italic,
+            Underline,
+            Strikethrough,
+            Font,
+            Alignment,
+            List,
+            TodoList,
+            Indent,
+            IndentBlock,
+            BlockQuote,
+            HorizontalLine,
+            Link,
+            Image,
+            ImageCaption,
+            ImageResize,
+            ImageStyle,
+            ImageToolbar,
+            ImageUpload,
+            Table,
+            TableToolbar,
+            SourceEditing
+        } from 'ckeditor5';
+        import translations from 'ckeditor5/translations/tr.js';
+        
+        import { ContentFilePlugin } from '/js/ckeditor/content-file-plugin.js';
 
+        // Custom plugin configuration variables
+        window.contentFileUploadUrl = '@Url.Action("UploadContentFile", "Page", new { area = "Panel" })';
+        window.pageCategoryId = '@Model.CategoryId';
+        window.pageId = '@Model.Id';
+
+
+        class MyUploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+            }
+            upload() {
+                return this.loader.file
+                    .then(file => new Promise((resolve, reject) => {
+                        const data = new FormData();
+                        data.append('file', file);
+                        data.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                        $.ajax({
+                            url: '@Url.Action("UploadImage", "Page", new { area = "Panel" })',
+                            type: 'POST',
+                            data: data,
+                            processData: false,
+                            contentType: false,
+                            success: function (response) {
+                                resolve({ default: response.url });
+                            },
+                            error: function (xhr) {
+                                let msg = 'Yükleme başarısız';
+                                try {
+                                    const json = JSON.parse(xhr.responseText);
+                                    if (json.error && json.error.message) msg = json.error.message;
+                                    else if (json.error) msg = json.error;
+                                } catch(e) {}
+                                reject(msg);
+                            }
+                        });
+                    }));
+            }
+            abort() { }
+        }
+
+        function MyCustomUploadAdapterPlugin(editor) {
+            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                return new MyUploadAdapter(loader);
+            };
+        }
+
+        ClassicEditor.create(document.querySelector('#contentEditor'), {
+            plugins: [
+                Essentials, Paragraph, Heading, Bold, Italic, Underline, Strikethrough, 
+                Font, Alignment, List, TodoList, Indent, IndentBlock, BlockQuote, 
+                HorizontalLine, Link, Image, ImageCaption, ImageResize, ImageStyle, 
+                ImageToolbar, ImageUpload, Table, TableToolbar, SourceEditing, 
+                MyCustomUploadAdapterPlugin, ContentFilePlugin
+            ],
+            toolbar: {
+                items: [
+                    'undo', 'redo', '|',
+                    'heading', '|',
+                    'bold', 'italic', 'underline', 'strikethrough', '|',
+                    'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
+                    'alignment', '|',
+                    'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent', '|',
+                    'blockQuote', 'insertTable', 'horizontalLine', '|',
+                    'link', 'uploadImage', 'insertContentFile', '|',
+                    'sourceEditing'
+                ],
+                shouldNotGroupWhenFull: true
+            },
+            language: 'tr',
+            translations: [translations],
+            image: {
+                toolbar: [
+                    'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|',
+                    'toggleImageCaption', 'imageTextAlternative', '|',
+                    'resizeImage'
+                ]
+            },
+            table: {
+                contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
+            }
+        })
+        .then(editor => {
+            window.editor = editor;
+            
+            // Kaydetmeden önce textarea'yı kesin olarak güncelle
+            $('form').not('.delete-attachment-form').on('submit', function () {
+                var currentContent = editor.getData();
+                $('#contentEditor').val(currentContent);
+            });
+            
             // Ek dosya silme onayı
             $('.delete-attachment-btn').on('click', function () {
                 var form = $(this).closest('.delete-attachment-form');
-                swal({
-                    title: "Emin misiniz?",
-                    text: "Bu dosyayı silmek istediğinize emin misiniz?",
-                    type: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#DD6B55",
-                    confirmButtonText: "Evet, sil!",
-                    cancelButtonText: "Vazgeç",
-                    closeOnConfirm: false
-                }, function () {
-                    form.submit();
-                });
+                if (typeof swal !== 'undefined') {
+                    swal({
+                        title: "Emin misiniz?",
+                        text: "Bu dosyayı silmek istediğinize emin misiniz?",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "Evet, sil!",
+                        cancelButtonText: "Vazgeç",
+                        closeOnConfirm: false
+                    }, function () {
+                        form.submit();
+                    });
+                } else {
+                    if (confirm("Bu dosyayı silmek istediğinize emin misiniz?")) {
+                        form.submit();
+                    }
+                }
             });
+        })
+        .catch(error => {
+            console.error(error);
         });
     </script>
 }

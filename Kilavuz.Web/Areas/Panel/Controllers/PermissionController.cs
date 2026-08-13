@@ -14,7 +14,7 @@ using Kilavuz.Web.Domain.Enums;
 namespace Kilavuz.Web.Areas.Panel.Controllers;
 
 [Area("Panel")]
-[Authorize(Policy = "YetkiliOrAbove")]
+[Authorize(Roles = "SuperAdmin")]
 public class PermissionController : Controller
 {
     private readonly IDbConnectionFactory _connectionFactory;
@@ -33,48 +33,27 @@ public class PermissionController : Controller
     // ─── Sahiplik Kontrolü ────────────────────────────────────────────────────
 
     /// <summary>
-    /// Verilen içeriğin sahibi mi? SuperAdmin her zaman true.
-    /// ContentType'a göre Applications veya Pages tablosundan CreatedByUserId'yi çeker.
+    /// Verilen içeriğin sahibi mi? Sadece SuperAdmin erişebildiği için her zaman true döner.
     /// </summary>
     private async Task<(bool isOwner, string contentName)> GetContentOwnerInfoAsync(
         ContentType contentType, int contentId)
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        if (IsSuperAdmin())
-        {
-            // SuperAdmin için sadece içerik adını döndür
-            string name;
-            if (contentType == ContentType.Application)
-            {
-                name = await connection.ExecuteScalarAsync<string>(
-                    "SELECT Name FROM Applications WHERE Id = @Id AND IsDeleted = 0",
-                    new { Id = contentId }) ?? "Bilinmeyen Uygulama";
-            }
-            else
-            {
-                name = await connection.ExecuteScalarAsync<string>(
-                    "SELECT Title FROM Pages WHERE Id = @Id AND IsDeleted = 0",
-                    new { Id = contentId }) ?? "Bilinmeyen Sayfa";
-            }
-            return (true, name);
-        }
-
-        // Yetkili için sahiplik kontrolü
+        string name;
         if (contentType == ContentType.Application)
         {
-            var row = await connection.QuerySingleOrDefaultAsync<(int CreatedByUserId, string Name)>(
-                "SELECT CreatedByUserId, Name FROM Applications WHERE Id = @Id AND IsDeleted = 0",
-                new { Id = contentId });
-            return (row.CreatedByUserId == GetCurrentUserId(), row.Name ?? string.Empty);
+            name = await connection.ExecuteScalarAsync<string>(
+                "SELECT Name FROM Applications WHERE Id = @Id AND IsDeleted = 0",
+                new { Id = contentId }) ?? "Bilinmeyen Uygulama";
         }
-        else // ContentType.Page
+        else
         {
-            var row = await connection.QuerySingleOrDefaultAsync<(int CreatedByUserId, string Title)>(
-                "SELECT CreatedByUserId, Title FROM Pages WHERE Id = @Id AND IsDeleted = 0",
-                new { Id = contentId });
-            return (row.CreatedByUserId == GetCurrentUserId(), row.Title ?? string.Empty);
+            name = await connection.ExecuteScalarAsync<string>(
+                "SELECT Title FROM Pages WHERE Id = @Id AND IsDeleted = 0",
+                new { Id = contentId }) ?? "Bilinmeyen Sayfa";
         }
+        return (true, name);
     }
 
     // ─── Manage ───────────────────────────────────────────────────────────────

@@ -137,7 +137,7 @@ public class PageController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(PageEntity model, IFormFile? coverImage)
+    public async Task<IActionResult> Create(PageEntity model)
     {
         var (isOwner, _, _) = await GetCategoryOwnerInfoAsync(model.CategoryId);
         if (!isOwner)
@@ -152,21 +152,6 @@ public class PageController : Controller
             return View(model);
         }
 
-        // Kapak görseli yükleme
-        if (coverImage != null && coverImage.Length > 0)
-        {
-            try
-            {
-                var uploadResult = await _fileStorageService.UploadImageAsync(coverImage);
-                model.CoverImagePath = uploadResult.RelativePath;
-            }
-            catch (ArgumentException ex)
-            {
-                ModelState.AddModelError("CoverImagePath", $"Görsel yükleme hatası: {ex.Message}");
-                ViewBag.CategoryId = model.CategoryId;
-                return View(model);
-            }
-        }
 
         // SortOrder: CategoryId bazlı otomatik sıra
         if (model.SortOrder == 0)
@@ -221,7 +206,7 @@ public class PageController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(PageEntity model, IFormFile? coverImage)
+    public async Task<IActionResult> Edit(PageEntity model)
     {
         if (!ModelState.IsValid)
         {
@@ -245,34 +230,6 @@ public class PageController : Controller
         existing.IsActive = model.IsActive;
         existing.AccessType = model.AccessType;
 
-        // Kapak görseli güncelleme
-        if (coverImage != null && coverImage.Length > 0)
-        {
-            try
-            {
-                // Eski görseli fiziksel sil
-                if (!string.IsNullOrEmpty(existing.CoverImagePath))
-                {
-                    var oldPath = Path.Combine(_env.WebRootPath, existing.CoverImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                    if (System.IO.File.Exists(oldPath))
-                    {
-                        try { System.IO.File.Delete(oldPath); } catch { /* Silme başarısız olsa bile devam et */ }
-                    }
-                }
-
-                var uploadResult = await _fileStorageService.UploadImageAsync(coverImage);
-                existing.CoverImagePath = uploadResult.RelativePath;
-            }
-            catch (ArgumentException ex)
-            {
-                ModelState.AddModelError("CoverImagePath", $"Görsel yükleme hatası: {ex.Message}");
-                var attachmentsResult2 = await _attachmentService.GetAllAsync(new { PageId = model.Id });
-                ViewBag.Attachments = attachmentsResult2.IsSuccess
-                    ? attachmentsResult2.Data.ToList()
-                    : new System.Collections.Generic.List<PageAttachmentEntity>();
-                return View(model);
-            }
-        }
 
         // GenericService.UpdateAsync → CanModify kontrolü + HtmlSanitize
         var result = await _pageService.UpdateAsync(existing, GetCurrentUserId(), GetCurrentUserRole());
@@ -393,7 +350,7 @@ public class PageController : Controller
         return RedirectToAction(nameof(Index), new { categoryId });
     }
 
-    // ─── Summernote AJAX Görsel Yükleme ──────────────────────────────────────
+    // ─── CKEditor AJAX Görsel Yükleme ──────────────────────────────────────
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -402,12 +359,57 @@ public class PageController : Controller
         try
         {
             var result = await _fileStorageService.UploadImageAsync(file);
-            // Summernote'un beklediği JSON format
+            // CKEditor'un beklediği JSON format
             return Json(new { url = result.RelativePath });
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return BadRequest(new { error = new { message = ex.Message } });
+        }
+    }
+
+    // ─── CKEditor AJAX Sayfa İçi Dosya Yükleme (Custom Widget) ────────────────
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadContentFile(IFormFile file, int? categoryId, int? pageId)
+    {
+        int catIdToVerify = 0;
+        
+        if (pageId.HasValue)
+        {
+            var pageResult = await _pageService.GetByIdAsync(pageId.Value);
+            if (!pageResult.IsSuccess) return BadRequest(new { error = new { message = "Sayfa bulunamadı." } });
+            catIdToVerify = pageResult.Data.CategoryId;
+        }
+        else if (categoryId.HasValue)
+        {
+            catIdToVerify = categoryId.Value;
+        }
+        else
+        {
+            return BadRequest(new { error = new { message = "Kategori veya Sayfa ID gerekli." } });
+        }
+
+        var (isOwner, _, _) = await GetCategoryOwnerInfoAsync(catIdToVerify);
+        if (!isOwner)
+        {
+            return BadRequest(new { error = new { message = "Dosya yükleme yetkiniz yok." } });
+        }
+
+        try
+        {
+            var result = await _fileStorageService.UploadContentFileAsync(file);
+            return Json(new 
+            { 
+                url = result.RelativePath,
+                fileName = result.OriginalFileName,
+                fileType = result.ContentType
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = new { message = ex.Message } });
         }
     }
 

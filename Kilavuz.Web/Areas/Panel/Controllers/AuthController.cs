@@ -179,8 +179,8 @@ public class AuthController : Controller
         else
         {
             // Eğer doğrudan login sayfasına gelindiyse (returnUrl yoksa),
-            // Panel yerine Public arayüzün ana sayfasına (/) yönlendir.
-            return Redirect("/");
+            // Panel/Home sayfasına yönlendir.
+            return RedirectToAction("Index", "Home", new { area = "Panel" });
         }
     }
 }
