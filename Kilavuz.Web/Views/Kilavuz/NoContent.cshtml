@@ -1,0 +1,30 @@
+@model Kilavuz.Web.Domain.Entities.Application
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+<div class="row wrapper border-bottom white-bg page-heading m-b-md">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+            <li class="breadcrumb-item active">@Model.Name</li>
+        </ol>
+        <h2>
+            @if (!string.IsNullOrEmpty(Model.IconPath))
+            { <i class="fa @Model.IconPath"></i> }
+            else
+            { <i class="fa fa-book"></i> }
+            @Model.Name
+        </h2>
+    </div>
+</div>
+
+<div class="row m-t-lg">
+    <div class="col-md-12 text-center text-muted">
+        <i class="fa fa-folder-open-o fa-3x"></i>
+        <h3 class="m-t-md">Bu uygulama için henüz içerik bulunmamaktadır.</h3>
+        <p>Kılavuz sayfaları eklendiğinde burada görüntülenecektir.</p>
+        <a href="/" class="btn btn-primary m-t-sm">Ana Sayfaya Dön</a>
+    </div>
+</div>

@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Dapper;
 using Kilavuz.Web.Application;
 using Kilavuz.Web.Application.Interfaces;
+using Kilavuz.Web.Domain.Enums;
 using AppEntity = Kilavuz.Web.Domain.Entities.Application;
 
 namespace Kilavuz.Web.Areas.Panel.Controllers;
@@ -15,11 +18,13 @@ public class ApplicationController : Controller
 {
     private readonly IGenericService<AppEntity> _applicationService;
     private readonly IReorderService<AppEntity> _reorderService;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public ApplicationController(IGenericService<AppEntity> applicationService, IReorderService<AppEntity> reorderService)
+    public ApplicationController(IGenericService<AppEntity> applicationService, IReorderService<AppEntity> reorderService, IDbConnectionFactory connectionFactory)
     {
         _applicationService = applicationService;
         _reorderService = reorderService;
+        _connectionFactory = connectionFactory;
     }
 
     private int GetCurrentUserId()
@@ -43,7 +48,25 @@ public class ApplicationController : Controller
 
         var apps = result.Data.OrderBy(a => a.SortOrder).ToList();
 
-        // Tüm listeyi görüntüleme izni (SuperAdmin ve Yetkili için aynı)
+        var currentUserId = GetCurrentUserId();
+        var currentUserRole = GetCurrentUserRole();
+
+        // Süper Admin değilse, başkasının oluşturduğu ve yetkisiz olduğu Kısıtlı uygulamaları gizle
+        if (currentUserRole != UserRoleType.SuperAdmin.ToString())
+        {
+            List<int> permittedAppIds = new();
+            using var connection = _connectionFactory.CreateConnection();
+            permittedAppIds = (await Dapper.SqlMapper.QueryAsync<int>(connection, @"
+                SELECT ContentId FROM ContentPermissions 
+                WHERE ContentType = 'Application' AND UserId = @UserId", 
+                new { UserId = currentUserId })).AsList();
+
+            apps = apps.Where(a => 
+                a.AccessType == AccessType.Public || 
+                a.CreatedByUserId == currentUserId || 
+                permittedAppIds.Contains(a.Id)
+            ).ToList();
+        }
 
         return View(apps);
     }

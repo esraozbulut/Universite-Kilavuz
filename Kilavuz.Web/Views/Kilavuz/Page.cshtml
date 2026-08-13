@@ -1,6 +1,6 @@
-@model Kilavuz.Web.Models.PageDetailViewModel
+@model Kilavuz.Web.Models.DocumentationViewModel
 @{
-    ViewData["Title"] = Model.Page.Title;
+    ViewData["Title"] = Model.ActivePage.Title;
     Layout = "~/Views/Shared/_PublicLayout.cshtml";
 }
 
@@ -8,33 +8,85 @@
     <div class="col-md-12">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id">@Model.Application.Name</a></li>
-            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id/@Model.Category.Id">@Model.Category.Name</a></li>
-            <li class="breadcrumb-item active">@Model.Page.Title</li>
+            <li class="breadcrumb-item">@Model.Application.Name</li>
+            <li class="breadcrumb-item active">@Model.ActivePage.Title</li>
         </ol>
-        <h2><i class="fa fa-file-text-o"></i> @Model.Page.Title</h2>
+        <h2>
+            @if (!string.IsNullOrEmpty(Model.Application.IconPath))
+            {
+                <i class="fa @Model.Application.IconPath"></i>
+            }
+            else
+            {
+                <i class="fa fa-book"></i>
+            }
+            @Model.Application.Name
+        </h2>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-12">
+    <!-- Sol Menü: Kategoriler ve Sayfalar -->
+    <div class="col-md-3">
+        @foreach (var catDto in Model.CategoriesWithPages)
+        {
+            <div class="ibox mb-3">
+                <div class="ibox-title bg-light font-weight-bold" style="padding: 10px 15px; border-bottom: 1px solid #e7eaec;">
+                    <i class="fa fa-folder-open-o"></i> @catDto.Category.Name
+                </div>
+                <div class="ibox-content p-0">
+                    <div class="list-group list-group-flush">
+                        @if (!catDto.Pages.Any())
+                        {
+                            <div class="list-group-item text-muted small">Sayfa yok</div>
+                        }
+                        else
+                        {
+                            @foreach (var p in catDto.Pages)
+                            {
+                                var isActive = p.Id == Model.ActivePage.Id;
+                                <a href="/kilavuz/@Model.Application.Id/@catDto.Category.Id/@p.Id" 
+                                   class="list-group-item list-group-item-action @(isActive ? "active font-weight-bold" : "")"
+                                   style="@(isActive ? "background-color: #1ab394; border-color: #1ab394; color: white;" : "")">
+                                    @if(p.AccessType == Kilavuz.Web.Domain.Enums.AccessType.Restricted)
+                                    {
+                                        <i class="fa fa-lock" style="@(isActive ? "color: white;" : "color: #f8ac59;")"></i> 
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-file-text-o"></i> 
+                                    }
+                                    @p.Title
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 
-
-
-        @* Rich Text İçerik *@
-        @* Güvenlik: ContentHtml, Panel'de kaydedilirken HtmlSanitizerService ile sanitize edilmiştir (bkz. PageService). *@
+    <!-- Sağ İçerik: Seçilen Sayfa Detayı -->
+    <div class="col-md-9">
         <div class="ibox">
-            <div class="ibox-content">
-                @Html.Raw(Model.Page.ContentHtml)
+            <div class="ibox-title">
+                <h3 class="m-b-0">@Model.ActivePage.Title</h3>
+                @if (!string.IsNullOrEmpty(Model.ActiveCategory.Description))
+                {
+                    <small class="text-muted">Kategori: @Model.ActiveCategory.Name - @Model.ActiveCategory.Description</small>
+                }
+            </div>
+            <div class="ibox-content" style="min-height: 400px;">
+                @Html.Raw(Model.ActivePage.ContentHtml)
             </div>
         </div>
 
         @* Ek Dosyalar *@
-        @if (Model.Attachments.Any())
+        @if (Model.ActiveAttachments.Any())
         {
             <div class="ibox m-t-md">
                 <div class="ibox-title">
-                    <h5><i class="fa fa-paperclip"></i> Ekler (@Model.Attachments.Count)</h5>
+                    <h5><i class="fa fa-paperclip"></i> Ekler (@Model.ActiveAttachments.Count)</h5>
                 </div>
                 <div class="ibox-content">
                     <table class="table table-bordered table-hover">
@@ -47,7 +99,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var att in Model.Attachments)
+                            @foreach (var att in Model.ActiveAttachments)
                             {
                                 <tr>
                                     <td><i class="fa fa-file-o"></i> @att.FileName</td>
@@ -66,6 +118,5 @@
                 </div>
             </div>
         }
-
     </div>
 </div>

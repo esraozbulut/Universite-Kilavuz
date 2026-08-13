@@ -72,12 +72,25 @@ public class KilavuzController : Controller
         var accessCheck = await CheckAccessAsync(app.AccessType, "Application", app.Id);
         if (accessCheck != null) return accessCheck;
 
-        var categories = (await connection.QueryAsync<Category>(@"
+        // Uygulamanın ilk kategorisini bul
+        var firstCategory = await connection.QueryFirstOrDefaultAsync<Category>(@"
             SELECT * FROM Categories WHERE ApplicationId = @AppId AND IsDeleted = 0 AND IsActive = 1
             ORDER BY SortOrder ASC",
-            new { AppId = appId })).AsList();
+            new { AppId = appId });
 
-        return View(new ApplicationDetailViewModel { Application = app, Categories = categories });
+        if (firstCategory == null)
+            return View("NoContent", app); // Kategori yoksa özel bir görünüm veya hata gösterilebilir
+
+        // İlk kategorinin ilk sayfasını bul
+        var firstPage = await connection.QueryFirstOrDefaultAsync<Page>(@"
+            SELECT * FROM Pages WHERE CategoryId = @CategoryId AND IsDeleted = 0 AND IsActive = 1
+            ORDER BY SortOrder ASC",
+            new { CategoryId = firstCategory.Id });
+
+        if (firstPage == null)
+            return View("NoContent", app);
+
+        return RedirectToAction("Page", new { appId = app.Id, categoryId = firstCategory.Id, pageId = firstPage.Id });
     }
 
     // ─── Kategori Detayı ─────────────────────────────────────────────────────
@@ -93,7 +106,6 @@ public class KilavuzController : Controller
 
         if (app == null) return NotFound();
 
-        // Kategori sayfasına erişim üst uygulamanın AccessType'ına göre kontrol edilir
         var accessCheck = await CheckAccessAsync(app.AccessType, "Application", app.Id);
         if (accessCheck != null) return accessCheck;
 
@@ -103,12 +115,16 @@ public class KilavuzController : Controller
 
         if (category == null) return NotFound();
 
-        var pages = (await connection.QueryAsync<Page>(@"
+        // Kategorinin ilk sayfasını bul
+        var firstPage = await connection.QueryFirstOrDefaultAsync<Page>(@"
             SELECT * FROM Pages WHERE CategoryId = @CategoryId AND IsDeleted = 0 AND IsActive = 1
             ORDER BY SortOrder ASC",
-            new { CategoryId = categoryId })).AsList();
+            new { CategoryId = category.Id });
 
-        return View(new CategoryDetailViewModel { Application = app, Category = category, Pages = pages });
+        if (firstPage == null)
+            return View("NoContent", app);
+
+        return RedirectToAction("Page", new { appId = app.Id, categoryId = category.Id, pageId = firstPage.Id });
     }
 
     // ─── Sayfa Detayı ────────────────────────────────────────────────────────
@@ -147,12 +163,46 @@ public class KilavuzController : Controller
             SELECT * FROM PageAttachments WHERE PageId = @PageId",
             new { PageId = pageId })).AsList();
 
-        return View(new PageDetailViewModel
+        // Sol menü için tüm kategori ve sayfaları çek
+        var allCategories = (await connection.QueryAsync<Category>(@"
+            SELECT * FROM Categories WHERE ApplicationId = @AppId AND IsDeleted = 0 AND IsActive = 1
+            ORDER BY SortOrder ASC",
+            new { AppId = appId })).AsList();
+
+        var userId = GetCurrentUserId();
+        List<int> permittedPageIds = new();
+        if (userId != null)
+        {
+            permittedPageIds = (await connection.QueryAsync<int>(@"
+                SELECT ContentId FROM ContentPermissions 
+                WHERE ContentType = 'Page' AND UserId = @UserId", 
+                new { UserId = userId })).AsList();
+        }
+
+        var rawAllPages = (await connection.QueryAsync<Page>(@"
+            SELECT p.* FROM Pages p
+            INNER JOIN Categories c ON p.CategoryId = c.Id
+            WHERE c.ApplicationId = @AppId AND p.IsDeleted = 0 AND p.IsActive = 1
+            ORDER BY p.SortOrder ASC",
+            new { AppId = appId })).AsList();
+
+        var allPages = rawAllPages
+            .Where(p => p.AccessType == AccessType.Public || permittedPageIds.Contains(p.Id))
+            .ToList();
+
+        var categoriesWithPages = allCategories.Select(c => new CategoryWithPagesDto
+        {
+            Category = c,
+            Pages = allPages.Where(p => p.CategoryId == c.Id).ToList()
+        }).ToList();
+
+        return View(new DocumentationViewModel
         {
             Application = app,
-            Category = category,
-            Page = page,
-            Attachments = attachments
+            CategoriesWithPages = categoriesWithPages,
+            ActiveCategory = category,
+            ActivePage = page,
+            ActiveAttachments = attachments
         });
     }
 }

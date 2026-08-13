@@ -24,3 +24,20 @@ public class PageDetailViewModel
     public Page Page { get; set; } = null!;
     public List<PageAttachment> Attachments { get; set; } = new();
 }
+
+public class CategoryWithPagesDto
+{
+    public Category Category { get; set; } = null!;
+    public List<Page> Pages { get; set; } = new();
+}
+
+public class DocumentationViewModel
+{
+    public AppEntity Application { get; set; } = null!;
+    public List<CategoryWithPagesDto> CategoriesWithPages { get; set; } = new();
+    
+    // Aktif görüntülenen sayfa verileri
+    public Category ActiveCategory { get; set; } = null!;
+    public Page ActivePage { get; set; } = null!;
+    public List<PageAttachment> ActiveAttachments { get; set; } = new();
+}
