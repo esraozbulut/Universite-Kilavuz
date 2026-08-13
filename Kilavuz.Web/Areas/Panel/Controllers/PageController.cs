@@ -1,3 +1,4 @@
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using Kilavuz.Web.Application;
 using Kilavuz.Web.Application.Interfaces;
 using Kilavuz.Web.Data;
+using Kilavuz.Web.Domain.Enums;
 using AppEntity = Kilavuz.Web.Domain.Entities.Application;
 using CategoryEntity = Kilavuz.Web.Domain.Entities.Category;
 using PageEntity = Kilavuz.Web.Domain.Entities.Page;
@@ -29,6 +31,7 @@ public class PageController : Controller
     private readonly IGenericRepository<PageAttachmentEntity> _attachmentRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly IWebHostEnvironment _env;
+    private readonly IDbConnectionFactory _connectionFactory;
 
     public PageController(
         IPageService pageService,
@@ -38,7 +41,8 @@ public class PageController : Controller
         IGenericService<PageAttachmentEntity> attachmentService,
         IGenericRepository<PageAttachmentEntity> attachmentRepository,
         IFileStorageService fileStorageService,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        IDbConnectionFactory connectionFactory)
     {
         _pageService = pageService;
         _categoryService = categoryService;
@@ -48,6 +52,7 @@ public class PageController : Controller
         _attachmentRepository = attachmentRepository;
         _fileStorageService = fileStorageService;
         _env = env;
+        _connectionFactory = connectionFactory;
     }
 
     private int GetCurrentUserId()
@@ -498,7 +503,9 @@ public class PageController : Controller
         return RedirectToAction(nameof(Edit), new { id = pageId });
     }
 
-    // ─── Ek Dosya İndirme ─────────────────────────────────────────────────────
+    // ─── Ek Dosya İndirme (Panel) ──────────────────────────────────────────────
+    // Bu action YetkiliOrAbove ile korunuyor. Ek olarak Restricted sayfa kontrolü
+    // de yapılıyor (Faz 7 Adım 4'te ertelenmişti, Faz 8 Adım 5'te tamamlandı).
 
     [HttpGet]
     public async Task<IActionResult> DownloadAttachment(int attachmentId)
@@ -511,6 +518,29 @@ public class PageController : Controller
         }
 
         var attachment = attachResult.Data;
+
+        // Güvenlik: Üst sayfanın Restricted kontrolü (Kural 2.4 — sunucu tarafında doğrulama)
+        var pageResult = await _pageService.GetByIdAsync(attachment.PageId);
+        if (pageResult.IsSuccess)
+        {
+            var page = pageResult.Data;
+            if (page.AccessType == AccessType.Restricted)
+            {
+                var currentUserId = GetCurrentUserId();
+                using var connection = _connectionFactory.CreateConnection();
+                var hasPermission = await connection.ExecuteScalarAsync<int>(@"
+                    SELECT COUNT(1) FROM ContentPermissions
+                    WHERE ContentType = 'Page' AND ContentId = @ContentId AND UserId = @UserId",
+                    new { ContentId = page.Id, UserId = currentUserId });
+
+                if (hasPermission == 0 && GetCurrentUserRole() != "SuperAdmin")
+                {
+                    TempData["ErrorMessage"] = "Bu dosyaya erişim yetkiniz yok.";
+                    return RedirectToAction(nameof(Edit), new { id = attachment.PageId });
+                }
+            }
+        }
+
         var physicalPath = Path.Combine(_env.ContentRootPath, "App_Data", "Uploads", "Attachments", attachment.StoredFileName);
 
         if (!System.IO.File.Exists(physicalPath))
