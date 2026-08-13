@@ -34,7 +34,7 @@
 | 6 | Kimlik Doğrulama ve Yetkilendirme | ✅ Tamamlandı | Rate Limiting - Kullanıcı Adı Değiştirerek Atlatma: LoginPolicy (kullanıcı+IP bazlı) tek başına, saldırganın farklı kullanıcı adları deneyerek limiti atlatmasını engellemez; GlobalPolicy (IP bazlı, 100/dakika) bir üst sınır sağlar ama bu gevşek bir eşik. Faz 9 (Güvenlik Sıkılaştırma) sırasında login formu için daha sıkı bir IP-only üst limit (ör. dakikada 20) eklenmesi değerlendirilmeli. |
 | 7 | Panel Modülleri | ✅ Tamamlandı | Faz 7 Adım 6 ile Log yönetimi tamamlandı. Tüm 6 madde başarıyla uygulandı. |
 | 8 | UI (Public) Modülleri | ✅ Tamamlandı | UI tarafındaki rotalar, sayfalar (Uygulama/Kategori/Sayfa Detay) ve bağımsız yetki kontrolleri (Application + Page seviyesi) başarıyla entegre edildi. |
-| 9 | Güvenlik Sıkılaştırma ve Doğrulama | ⬜ Beklemede | |
+| 9 | Güvenlik Sıkılaştırma ve Doğrulama | 🔄 Devam Ediyor | Login (boş ReturnUrl) sonrası genel arayüze yönlendirme, Navbar'a Yönetim Paneli/Kılavuza Dön ve güvenli Çıkış Yap linkleri eklendi. Captcha dev-bypass çift güvenlikli (config + IsDevelopment) olarak tamamlandı. |
 | 10 | Cilalama (Polish) | ⬜ Beklemede | |
 
 **Durum değerleri:** ⬜ Beklemede · 🔄 Devam Ediyor · ✅ Tamamlandı · ⏸️ Duraklatıldı (sebep notta belirtilir)
