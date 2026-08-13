@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 using Kilavuz.Web.Application.Interfaces;
@@ -22,15 +25,21 @@ public class AuthController : Controller
     private readonly ICaptchaProvider _captchaProvider;
     private readonly IMemoryCache _cache;
     private readonly Serilog.ILogger _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
     public AuthController(
         IAuthenticationProvider authProvider, 
         ICaptchaProvider captchaProvider, 
-        IMemoryCache cache)
+        IMemoryCache cache,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
         _authProvider = authProvider;
         _captchaProvider = captchaProvider;
         _cache = cache;
+        _configuration = configuration;
+        _environment = environment;
         _logger = Log.ForContext<AuthController>();
     }
 
@@ -63,21 +72,26 @@ public class AuthController : Controller
         }
 
         // 1. CAPTCHA Doğrulaması
-        if (string.IsNullOrWhiteSpace(model.CaptchaKey) || string.IsNullOrWhiteSpace(model.CaptchaCode))
-        {
-            ModelState.AddModelError("CaptchaCode", "Lütfen doğrulama kodunu giriniz.");
-            model.CaptchaKey = Guid.NewGuid().ToString("N");
-            return View(model);
-        }
+        bool disableCaptcha = _configuration.GetValue<bool>("Security:DisableCaptchaInDev");
 
-        if (!_cache.TryGetValue(model.CaptchaKey, out string? cachedCaptcha) || 
-            !string.Equals(cachedCaptcha, model.CaptchaCode, StringComparison.OrdinalIgnoreCase))
+        if (!(disableCaptcha && _environment.IsDevelopment()))
         {
-            _logger.Warning("Başarısız giriş denemesi: Yanlış veya süresi geçmiş CAPTCHA. Kullanıcı Adı: {Username}", model.Username);
-            ModelState.AddModelError("CaptchaCode", "Doğrulama kodu hatalı veya süresi dolmuş.");
-            _cache.Remove(model.CaptchaKey);
-            model.CaptchaKey = Guid.NewGuid().ToString("N");
-            return View(model);
+            if (string.IsNullOrWhiteSpace(model.CaptchaKey) || string.IsNullOrWhiteSpace(model.CaptchaCode))
+            {
+                ModelState.AddModelError("CaptchaCode", "Lütfen doğrulama kodunu giriniz.");
+                model.CaptchaKey = Guid.NewGuid().ToString("N");
+                return View(model);
+            }
+
+            if (!_cache.TryGetValue(model.CaptchaKey, out string? cachedCaptcha) || 
+                !string.Equals(cachedCaptcha, model.CaptchaCode, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Warning("Başarısız giriş denemesi: Yanlış veya süresi geçmiş CAPTCHA. Kullanıcı Adı: {Username}", model.Username);
+                ModelState.AddModelError("CaptchaCode", "Doğrulama kodu hatalı veya süresi dolmuş.");
+                _cache.Remove(model.CaptchaKey);
+                model.CaptchaKey = Guid.NewGuid().ToString("N");
+                return View(model);
+            }
         }
 
         _cache.Remove(model.CaptchaKey);
@@ -164,10 +178,9 @@ public class AuthController : Controller
         }
         else
         {
-            // E�er do�rudan login sayfas�na gelindiyse (returnUrl yoksa),
-            // Panel yerine Public aray�z�n ana sayfas�na (/) y�nlendir.
+            // Eğer doğrudan login sayfasına gelindiyse (returnUrl yoksa),
+            // Panel yerine Public arayüzün ana sayfasına (/) yönlendir.
             return Redirect("/");
         }
     }
 }
-
