@@ -1,29 +1,40 @@
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Kilavuz.Web.Application;
+using Kilavuz.Web.Application.Interfaces;
 using Kilavuz.Web.Models;
+using AppEntity = Kilavuz.Web.Domain.Entities.Application;
 
 namespace Kilavuz.Web.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly IGenericService<AppEntity> _applicationService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(IGenericService<AppEntity> applicationService)
     {
-        _logger = logger;
+        _applicationService = applicationService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var result = await _applicationService.GetAllAsync();
+        var apps = result.IsSuccess
+            ? result.Data
+                .Where(a => a.IsActive && !a.IsDeleted)
+                .OrderBy(a => a.SortOrder)
+                .ToList()
+            : new();
+
+        return View(new HomeViewModel { Applications = apps });
     }
 
     public IActionResult Privacy()
     {
         return View();
     }
-
-
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
