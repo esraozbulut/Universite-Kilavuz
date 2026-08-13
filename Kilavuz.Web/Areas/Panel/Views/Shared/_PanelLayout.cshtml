@@ -21,10 +21,10 @@
             <div class="sidebar-collapse">
                 <ul class="nav metismenu" id="side-menu">
                     <li class="nav-header">
-                        <div class="dropdown profile-element">
-                            <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <div class="profile-element">
+                            <a href="/Panel/Profile" title="Profilimi Düzenle">
                                 <span class="block m-t-xs font-bold">@(User.Identity?.Name ?? "Kullanıcı")</span>
-                                <span class="text-muted text-xs block">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Yetkisiz")</span>
+                                <span class="text-muted text-xs block">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Yetkisiz") <i class="fa fa-edit"></i></span>
                             </a>
                         </div>
                         <div class="logo-element">KLV</div>
