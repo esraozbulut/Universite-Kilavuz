@@ -8,16 +8,16 @@
 
 ## Son Güncelleme
 
-- **Tarih:** 2026-08-12
+- **Tarih:** 2026-08-13
 - **Güncelleyen:** Gemini Oturumu
 
 ---
 
 ## Genel Durum Özeti
 
-**Şu an aktif faz:** Faz 8 — UI (Public) Modülleri (Beklemede)
+**Şu an aktif faz:** Faz 9 — Güvenlik Sıkılaştırma ve Doğrulama (Beklemede)
 
-**Sıradaki somut adım:** Faz 8 kapsamında kullanıcı arayüzünün inşasına başlanacak.
+**Sıradaki somut adım:** Faz 9 kapsamında sistemin genel güvenlik testleri ve rate limiting/CAPTCHA iyileştirmelerinin yapılması.
 
 ---
 
@@ -33,7 +33,7 @@
 | 5 | Infrastructure Katmanı | ✅ Tamamlandı | 6/6 alt-adım tamamlandı: Serilog, CAPTCHA, Rate Limiting, FileStorage, HtmlSanitizer, AuthenticationProvider |
 | 6 | Kimlik Doğrulama ve Yetkilendirme | ✅ Tamamlandı | Rate Limiting - Kullanıcı Adı Değiştirerek Atlatma: LoginPolicy (kullanıcı+IP bazlı) tek başına, saldırganın farklı kullanıcı adları deneyerek limiti atlatmasını engellemez; GlobalPolicy (IP bazlı, 100/dakika) bir üst sınır sağlar ama bu gevşek bir eşik. Faz 9 (Güvenlik Sıkılaştırma) sırasında login formu için daha sıkı bir IP-only üst limit (ör. dakikada 20) eklenmesi değerlendirilmeli. |
 | 7 | Panel Modülleri | ✅ Tamamlandı | Faz 7 Adım 6 ile Log yönetimi tamamlandı. Tüm 6 madde başarıyla uygulandı. |
-| 8 | UI (Public) Modülleri | ⬜ Beklemede | |
+| 8 | UI (Public) Modülleri | ✅ Tamamlandı | UI tarafındaki rotalar, sayfalar (Uygulama/Kategori/Sayfa Detay) ve bağımsız yetki kontrolleri (Application + Page seviyesi) başarıyla entegre edildi. |
 | 9 | Güvenlik Sıkılaştırma ve Doğrulama | ⬜ Beklemede | |
 | 10 | Cilalama (Polish) | ⬜ Beklemede | |
 
@@ -60,13 +60,13 @@
 
 ## Faz 8 — UI (Public) Modülleri Alt Kırılımı
 
-- [ ] Ana sayfa (Uygulama listesi)
-- [ ] Uygulama detay sayfası
-- [ ] Kategori detay sayfası
-- [ ] Sayfa detay sayfası
-- [ ] Arama
-- [ ] Kısıtlı içerik → login yönlendirme
-- [ ] Hata logu middleware
+- [x] Ana sayfa (Uygulama listesi)
+- [x] Uygulama detay sayfası
+- [x] Kategori detay sayfası
+- [x] Sayfa detay sayfası
+- [x] Arama
+- [x] Kısıtlı içerik → login yönlendirme
+- [x] Hata logu middleware
 
 ---
 
