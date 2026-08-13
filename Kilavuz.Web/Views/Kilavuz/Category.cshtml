@@ -1,0 +1,78 @@
+@model Kilavuz.Web.Models.CategoryDetailViewModel
+@using Kilavuz.Web.Domain.Enums
+@{
+    ViewData["Title"] = Model.Category.Name;
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+<div class="row wrapper border-bottom white-bg page-heading m-b-md">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id">@Model.Application.Name</a></li>
+            <li class="breadcrumb-item active">@Model.Category.Name</li>
+        </ol>
+        <h2><i class="fa fa-folder-open-o"></i> @Model.Category.Name</h2>
+        @if (!string.IsNullOrEmpty(Model.Category.Description))
+        {
+            <p class="text-muted">@Model.Category.Description</p>
+        }
+    </div>
+</div>
+
+@if (!Model.Pages.Any())
+{
+    <div class="row m-t-lg">
+        <div class="col-md-12 text-center text-muted">
+            <i class="fa fa-file-o fa-3x"></i>
+            <p class="m-t-md">Bu kategoride henüz sayfa bulunmamaktadır.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row m-t-md">
+        <div class="col-md-12">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Başlık</th>
+                                <th width="80">Erişim</th>
+                                <th width="120"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.Pages)
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="fa fa-file-text-o text-muted"></i>
+                                        @p.Title
+                                    </td>
+                                    <td>
+                                        @if (p.AccessType == AccessType.Restricted)
+                                        {
+                                            <span class="label label-warning"><i class="fa fa-lock"></i> Kısıtlı</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-success"><i class="fa fa-globe"></i> Açık</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="/kilavuz/@Model.Application.Id/@Model.Category.Id/@p.Id"
+                                           class="btn btn-default btn-xs">
+                                            <i class="fa fa-eye"></i> Görüntüle
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,13 @@
+@model List<Kilavuz.Web.Domain.Entities.Application>
+
+@if (Model.Any())
+{
+    @foreach (var app in Model)
+    {
+        <li><a href="/kilavuz/@app.Id">@app.Name</a></li>
+    }
+}
+else
+{
+    <li class="disabled"><a href="#">Uygulama bulunamadı</a></li>
+}

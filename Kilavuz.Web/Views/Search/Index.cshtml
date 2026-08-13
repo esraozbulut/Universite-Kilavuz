@@ -1,0 +1,76 @@
+@model Kilavuz.Web.Models.SearchViewModel
+@{
+    ViewData["Title"] = string.IsNullOrEmpty(Model.Query) ? "Arama" : $"'{Model.Query}' için arama sonuçları";
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+<div class="row m-b-md">
+    <div class="col-md-12">
+        <form action="/Search" method="get" class="form-inline">
+            <div class="input-group" style="max-width:600px; width:100%">
+                <input id="searchInput" type="text" name="q" class="form-control form-control-lg"
+                       value="@Model.Query" placeholder="Kılavuzlarda ara..." autocomplete="off" />
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Ara</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Query))
+{
+    <div class="row">
+        <div class="col-md-12">
+            <p class="text-muted">
+                "<strong>@Model.Query</strong>" için <strong>@Model.Results.Count</strong> sonuç bulundu.
+            </p>
+        </div>
+    </div>
+
+    @if (!Model.Results.Any())
+    {
+        <div class="row m-t-lg">
+            <div class="col-md-12 text-center text-muted">
+                <i class="fa fa-search fa-3x"></i>
+                <p class="m-t-md">Aramanızla eşleşen sonuç bulunamadı.</p>
+                <a href="/" class="btn btn-default m-t-sm">Ana Sayfaya Dön</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="list-group">
+                    @foreach (var result in Model.Results)
+                    {
+                        <a href="@result.GetUrl()" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">
+                                        <i class="fa @result.GetIcon() text-muted"></i>
+                                        @result.Title
+                                    </h5>
+                                    @if (!string.IsNullOrEmpty(result.ParentName))
+                                    {
+                                        <small class="text-muted">
+                                            <i class="fa fa-level-up"></i> @result.ParentName
+                                        </small>
+                                    }
+                                    @if (!string.IsNullOrEmpty(result.Snippet))
+                                    {
+                                        <p class="mb-1 mt-1 text-muted small">
+                                            @(result.Snippet?.Length > 150 ? result.Snippet[..150] + "..." : result.Snippet)
+                                        </p>
+                                    }
+                                </div>
+                                <span class="badge badge-secondary ml-2">@result.GetTypeName()</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}

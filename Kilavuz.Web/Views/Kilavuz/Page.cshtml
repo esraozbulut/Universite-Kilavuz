@@ -1,0 +1,79 @@
+@model Kilavuz.Web.Models.PageDetailViewModel
+@{
+    ViewData["Title"] = Model.Page.Title;
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+<div class="row wrapper border-bottom white-bg page-heading m-b-md">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id">@Model.Application.Name</a></li>
+            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id/@Model.Category.Id">@Model.Category.Name</a></li>
+            <li class="breadcrumb-item active">@Model.Page.Title</li>
+        </ol>
+        <h2><i class="fa fa-file-text-o"></i> @Model.Page.Title</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+
+        @* Kapak Görseli *@
+        @if (!string.IsNullOrEmpty(Model.Page.CoverImagePath))
+        {
+            <div class="m-b-md">
+                <img src="@Model.Page.CoverImagePath" class="img-fluid img-responsive"
+                     style="max-height:300px; object-fit:cover; width:100%;"
+                     alt="@Model.Page.Title kapak görseli" />
+            </div>
+        }
+
+        @* Rich Text İçerik *@
+        @* Güvenlik: ContentHtml, Panel'de kaydedilirken HtmlSanitizerService ile sanitize edilmiştir (bkz. PageService). *@
+        <div class="ibox">
+            <div class="ibox-content">
+                @Html.Raw(Model.Page.ContentHtml)
+            </div>
+        </div>
+
+        @* Ek Dosyalar *@
+        @if (Model.Attachments.Any())
+        {
+            <div class="ibox m-t-md">
+                <div class="ibox-title">
+                    <h5><i class="fa fa-paperclip"></i> Ekler (@Model.Attachments.Count)</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Dosya Adı</th>
+                                <th width="100">Boyut</th>
+                                <th width="100">Yükleyen</th>
+                                <th width="120"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var att in Model.Attachments)
+                            {
+                                <tr>
+                                    <td><i class="fa fa-file-o"></i> @att.FileName</td>
+                                    <td>@((att.FileSize / 1024.0).ToString("F1")) KB</td>
+                                    <td>@att.UploadedAt.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <a href="/Attachment/Download/@att.Id"
+                                           class="btn btn-default btn-xs">
+                                            <i class="fa fa-download"></i> İndir
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

@@ -151,6 +151,15 @@ app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
+// Attribute routing (KilavuzController /kilavuz/{...} rotaları)
+app.MapControllers();
+
+// Arama rotası
+app.MapControllerRoute(
+    name: "search",
+    pattern: "Search",
+    defaults: new { controller = "Search", action = "Index" });
+
 // Varsayılan UI yönlendirmesi
 app.MapControllerRoute(
     name: "default",

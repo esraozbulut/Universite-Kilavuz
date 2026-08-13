@@ -1,9 +1,71 @@
+@model Kilavuz.Web.Models.HomeViewModel
+@using Kilavuz.Web.Domain.Enums
 @{
     ViewData["Title"] = "Ana Sayfa";
     Layout = "~/Views/Shared/_PublicLayout.cshtml";
 }
 
-<div class="jumbotron text-center">
-    <h1>Kurumsal Kullanım Kılavuzu</h1>
-    <p>Sisteme hoş geldiniz. Bu bir Public Layout test sayfasıdır.</p>
+<div class="row m-b-lg m-t-lg">
+    <div class="col-md-12 text-center">
+        <h2>Kurumsal Kullanım Kılavuzu</h2>
+        <p class="text-muted">Aradığınız uygulamayı seçerek kılavuzlara ulaşabilirsiniz.</p>
+
+        <form action="/Search" method="get" class="form-inline m-t-md justify-content-center">
+            <div class="input-group" style="max-width:500px; width:100%">
+                <input id="searchInput" type="text" name="q" class="form-control form-control-lg"
+                       placeholder="Kılavuzlarda ara..." autocomplete="off" />
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
+
+@if (!Model.Applications.Any())
+{
+    <div class="row">
+        <div class="col-md-12 text-center text-muted">
+            <i class="fa fa-inbox fa-3x"></i>
+            <p class="m-t-md">Henüz aktif bir uygulama bulunmamaktadır.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var app in Model.Applications)
+        {
+            <div class="col-md-4 col-sm-6 m-b-md">
+                <div class="ibox">
+                    <div class="ibox-content" style="position:relative">
+                        @if (app.AccessType == AccessType.Restricted)
+                        {
+                            <span class="label label-warning" style="position:absolute; top:10px; right:10px;">
+                                <i class="fa fa-lock"></i> Kısıtlı
+                            </span>
+                        }
+                        <h3>
+                            @if (!string.IsNullOrEmpty(app.IconPath))
+                            {
+                                <i class="fa @app.IconPath"></i>
+                            }
+                            else
+                            {
+                                <i class="fa fa-book"></i>
+                            }
+                            @app.Name
+                        </h3>
+                        @if (!string.IsNullOrEmpty(app.Description))
+                        {
+                            <p class="text-muted">@app.Description</p>
+                        }
+                        <a href="/kilavuz/@app.Id" class="btn btn-primary btn-sm m-t-sm">
+                            <i class="fa fa-arrow-right"></i> İncele
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

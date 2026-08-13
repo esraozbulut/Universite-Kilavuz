@@ -1,0 +1,57 @@
+@model Kilavuz.Web.Models.ApplicationDetailViewModel
+@{
+    ViewData["Title"] = Model.Application.Name;
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+<div class="row wrapper border-bottom white-bg page-heading m-b-md">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+            <li class="breadcrumb-item active">@Model.Application.Name</li>
+        </ol>
+        <h2>
+            @if (!string.IsNullOrEmpty(Model.Application.IconPath))
+            { <i class="fa @Model.Application.IconPath"></i> }
+            else
+            { <i class="fa fa-book"></i> }
+            @Model.Application.Name
+        </h2>
+        @if (!string.IsNullOrEmpty(Model.Application.Description))
+        {
+            <p class="text-muted">@Model.Application.Description</p>
+        }
+    </div>
+</div>
+
+@if (!Model.Categories.Any())
+{
+    <div class="row m-t-lg">
+        <div class="col-md-12 text-center text-muted">
+            <i class="fa fa-folder-open-o fa-3x"></i>
+            <p class="m-t-md">Bu uygulamada henüz kategori bulunmamaktadır.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row m-t-md">
+        @foreach (var category in Model.Categories)
+        {
+            <div class="col-md-4 col-sm-6 m-b-md">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h4><i class="fa fa-folder-o"></i> @category.Name</h4>
+                        @if (!string.IsNullOrEmpty(category.Description))
+                        {
+                            <p class="text-muted small">@category.Description</p>
+                        }
+                        <a href="/kilavuz/@Model.Application.Id/@category.Id" class="btn btn-default btn-sm m-t-sm">
+                            <i class="fa fa-arrow-right"></i> Sayfaları Gör
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

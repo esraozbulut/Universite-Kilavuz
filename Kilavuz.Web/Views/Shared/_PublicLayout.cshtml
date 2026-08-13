@@ -28,8 +28,7 @@
                             <li class="dropdown">
                                 <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Uygulamalar</a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#">Uygulama 1</a></li>
-                                    <li><a href="#">Uygulama 2</a></li>
+                                    @await Component.InvokeAsync("NavbarApplications")
                                 </ul>
                             </li>
                         </ul>
