@@ -164,11 +164,10 @@ public class AuthController : Controller
         }
         else
         {
-            if (roles != null && roles.Contains("Yetkili"))
-            {
-                return RedirectToAction("Index", "Application", new { area = "Panel" });
-            }
-            return RedirectToAction("Index", "User", new { area = "Panel" });
+            // Eðer doðrudan login sayfasýna gelindiyse (returnUrl yoksa),
+            // Panel yerine Public arayüzün ana sayfasýna (/) yönlendir.
+            return Redirect("/");
         }
     }
 }
+
