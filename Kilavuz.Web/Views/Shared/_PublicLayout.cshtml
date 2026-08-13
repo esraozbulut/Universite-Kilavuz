@@ -33,11 +33,32 @@
                             </li>
                         </ul>
                         <ul class="nav navbar-top-links navbar-right">
-                            <li>
-                                <a asp-area="Panel" asp-controller="Auth" asp-action="Login">
-                                    <i class="fa fa-sign-in"></i> Giriş Yap
-                                </a>
-                            </li>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Yetkili"))
+                                {
+                                    <li>
+                                        <a asp-area="Panel" asp-controller="User" asp-action="Index">
+                                            <i class="fa fa-cogs"></i> Yönetim Paneline Git
+                                        </a>
+                                    </li>
+                                }
+                                <li>
+                                    <form asp-area="Panel" asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm" class="form-inline">
+                                        <button type="submit" class="btn btn-link text-muted" style="padding-top: 15px; text-decoration: none;">
+                                            <i class="fa fa-sign-out"></i> Çıkış Yap
+                                        </button>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <a asp-area="Panel" asp-controller="Auth" asp-action="Login">
+                                        <i class="fa fa-sign-in"></i> Giriş Yap
+                                    </a>
+                                </li>
+                            }
                         </ul>
                     </div>
                 </nav>
