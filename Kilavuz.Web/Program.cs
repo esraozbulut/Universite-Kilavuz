@@ -107,6 +107,18 @@ if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
 var app = builder.Build();
 
 // 5. Middleware Pipeline
+
+// En üstte IP adresi ve temel zenginleştirmeler
+app.Use(async (context, next) =>
+{
+    var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? context.Request.Headers.Host.ToString();
+    using (Serilog.Context.LogContext.PushProperty("IPAddress", ipAddress))
+    using (Serilog.Context.LogContext.PushProperty("RequestPath", context.Request.Path.Value))
+    {
+        await next();
+    }
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler(_ => { }); // This allows IExceptionHandler to run in Dev without a specific fallback route
@@ -115,9 +127,9 @@ else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection(); // Yalnızca prod ortamında
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles(); // wwwroot altındaki INSPINIA dosyaları için
 
 app.UseRouting();
@@ -145,6 +157,23 @@ if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
 app.UseAuthentication(); // Önce kimlik doğrulama
 app.UseAuthorization();  // Sonra yetki kontrolü
 app.UseSession();        // Session aktif ediliyor
+
+// Kimlik doğrulamadan sonra UserId'yi log'a ekle
+app.Use(async (context, next) =>
+{
+    var userId = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    if (int.TryParse(userId, out var id))
+    {
+        using (Serilog.Context.LogContext.PushProperty("UserId", id))
+        {
+            await next();
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
 
 // Alan (Area) yönlendirmesi - Panel
 app.MapControllerRoute(

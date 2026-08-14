@@ -42,20 +42,21 @@ public class LogController : Controller
         // 1. Audit Logs (Serilog MSSQL Sink)
         var auditQuery = @"
             SELECT TOP (@TopN)
-                Id, TimeStamp, Level, Message, Exception, Properties
-            FROM AuditLogs
+                A.Id, A.TimeStamp, A.Level, A.Message, A.Exception, A.UserId, A.IPAddress, A.RequestPath, U.UserName, A.Properties
+            FROM AuditLogs A
+            LEFT JOIN Users U ON A.UserId = U.Id
             WHERE 1=1";
 
         if (!string.IsNullOrEmpty(level))
-            auditQuery += " AND Level = @Level";
+            auditQuery += " AND A.Level = @Level";
             
         if (startDate.HasValue)
-            auditQuery += " AND TimeStamp >= @StartDate";
+            auditQuery += " AND A.TimeStamp >= @StartDate";
             
         if (endDate.HasValue)
-            auditQuery += " AND TimeStamp <= @EndDate";
+            auditQuery += " AND A.TimeStamp <= @EndDate";
 
-        auditQuery += " ORDER BY TimeStamp DESC";
+        auditQuery += " ORDER BY A.TimeStamp DESC";
 
         var rawAuditLogs = await connection.QueryAsync<dynamic>(auditQuery, new { TopN = topN, Level = level, StartDate = startDate, EndDate = endDate });
 
@@ -67,25 +68,22 @@ public class LogController : Controller
                 TimeStamp = row.TimeStamp,
                 Level = row.Level ?? string.Empty,
                 Message = row.Message ?? string.Empty,
-                Exception = row.Exception
+                Exception = row.Exception,
+                UserId = row.UserId?.ToString(),
+                UserName = row.UserName?.ToString(),
+                IPAddress = row.IPAddress?.ToString(),
+                RequestPath = row.RequestPath?.ToString()
             };
 
-            // Parse Properties XML
-            string propertiesXml = row.Properties;
-            if (!string.IsNullOrWhiteSpace(propertiesXml))
+            // Eğer Login gibi UserId'nin olmadığı özel işlemler varsa UserName'i Serilog özelliklerinden (XML) çekmeyi dene
+            if (string.IsNullOrEmpty(item.UserName) && !string.IsNullOrWhiteSpace((string?)row.Properties))
             {
                 try
                 {
-                    var xml = XElement.Parse(propertiesXml);
-                    item.UserId = xml.Elements("property").FirstOrDefault(e => (string?)e.Attribute("key") == "UserId")?.Value;
-                    item.UserName = xml.Elements("property").FirstOrDefault(e => (string?)e.Attribute("key") == "UserName")?.Value;
-                    item.IPAddress = xml.Elements("property").FirstOrDefault(e => (string?)e.Attribute("key") == "IPAddress")?.Value;
-                    item.RequestPath = xml.Elements("property").FirstOrDefault(e => (string?)e.Attribute("key") == "RequestPath")?.Value;
+                    var xml = XElement.Parse((string)row.Properties);
+                    item.UserName = xml.Elements("property").FirstOrDefault(e => (string?)e.Attribute("key") == "Username")?.Value;
                 }
-                catch
-                {
-                    // XML parse hatası yoksayılır
-                }
+                catch { }
             }
 
             model.AuditLogs.Add(item);

@@ -84,6 +84,11 @@ public class ApplicationController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
+        if (!User.IsInRole("SuperAdmin"))
+        {
+            model.IsPinned = false;
+        }
+
         var result = await _applicationService.CreateAsync(model, GetCurrentUserId(), GetCurrentUserRole());
         
         if (result.IsSuccess)
@@ -138,7 +143,12 @@ public class ApplicationController : Controller
         existing.Description = model.Description;
         existing.IconPath = model.IconPath;
         existing.IsActive = model.IsActive;
-        existing.IsPinned = model.IsPinned;
+
+        if (User.IsInRole("SuperAdmin"))
+        {
+            existing.IsPinned = model.IsPinned;
+        }
+
         existing.AccessType = model.AccessType;
 
         // GenericService UpdateAsync içinde _policy.CanModify kontrolü zaten yapılıyor!

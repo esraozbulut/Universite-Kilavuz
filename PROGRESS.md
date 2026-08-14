@@ -83,6 +83,8 @@
 - **Rate Limiting Kullanıcı Adı Kısıtı:** LoginRateLimiterPolicy ile Kullanıcı adı + IP bazlı kısıtlama tamamlandı.
 - **SuperAdmin Seed Data:** İlk giriş için oluşturulması planlanan `SuperAdmin` yetkili admin hesabı (`admin`) DB'ye eklendi ve manuel DB sorgusu ile doğrulandı.
 
+- **Faz 9 Tamamlamaları:** AuditLogs tablosu için Serilog özel sütun yapılandırması (UserId, IPAddress, RequestPath) başarıyla eklendi, ara katman yazılarak IP adresi ve ID verileri zenginleştirildi. Ayrıca Yetkili rolünün (SuperAdmin dışındakilerin) Uygulamaları sabitlemesi (IsPinned) arayüzden ve sunucu tarafından engellendi. PageAttachment/ContentPermission "Yetkili" erişimi Faz 7-8'de zaten çözülmüştü. (2026-08-14)
+
 ---
 
 ## Açık Konular / Netleşmemiş Noktalar
@@ -91,8 +93,6 @@
 
 - Kurumun mail tabanlı kimlik doğrulama sisteminin protokolü/altyapısı henüz belirsiz (bkz. `PRD.md` Bölüm 4, Aşama 2) — `InstitutionalAuthProvider` bu netleştiğinde tasarlanacak.
 - Geliştirmede kullanılacak kesin .NET sürümü teyit edilmeli (PRD'de "en güncel LTS" olarak bırakıldı).
-- **AuditLogs Tablosu (Serilog):** Faz 5'te Serilog yapılandırması yapılırken `columnOptionsSection` ile `UserId`, `IPAddress` ve `RequestPath` sütunlarının ayrı sütun olarak tanımlanması gerekiyor. (Varsayılan `autoCreateSqlTable` şeması, sonradan Panel üzerinden kullanıcı bazlı filtrelemeyi desteklemez, standart log sütunları ile tabloyu oluşturur).
-- **Yetkili İzinleri Sınırlaması (Faz 7'ye ertelendi):** Yetkili rolündeki bir kullanıcı, `PageAttachment` ve `ContentPermission` gibi `IAuditable` olmayan (Yani `CreatedByUserId` tutmayan) kaynaklarda şu an hiçbir zaman değişiklik yapamıyor (varsayılan red); bu durum Faz 7'de (Panel modülleri) ele alınmalı. Örneğin `PageAttachment` için silme/ekleme izni verilirken üst `Page` entity'sinin sahipliği kontrol edilerek izin verilebilir.
 - **Departman/Grup Bazlı İzin Yönetimi (Planlanan Ek Özellik):** Kullanıcı bazlı ContentPermissions'a ek olarak, departman/grup bazlı erişim izni verilebilmesi isteniyor (ör. IT departmanı bir Restricted içeriğe toplu erişebilsin). Bu PRD.md'nin orijinal kapsamında YOKTU, sonradan eklenen bir gereksinim. Faz 7-10 (mevcut PRD/WORKFLOW kapsamı) tamamlandıktan SONRA, ayrı bir faz olarak ele alınacak. Gerektirecekleri: yeni Department entity/tablosu, User-Department ilişkisi, ContentPermissions tablosunun GranteeType (User/Department) ayrımı taşıyacak şekilde genişletilmesi, Faz 8'deki erişim kontrolü mantığının hem bireysel hem departman bazlı izni kontrol etmesi, PermissionController/Manage.cshtml'in güncellenmesi.
 
 ---
