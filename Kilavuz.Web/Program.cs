@@ -87,8 +87,8 @@ if (!disableRateLimitInDev || !builder.Environment.IsDevelopment())
         // Login için kısıtlı politika (Username + IP bazlı)
         options.AddPolicy<string, Kilavuz.Web.Infrastructure.Security.LoginRateLimiterPolicy>("LoginPolicy");
 
-        // Genel kullanım için politika (IP bazlı)
-        options.AddPolicy("GlobalPolicy", httpContext =>
+        // Genel kullanım için politika (IP bazlı, TÜM isteklere uygulanır)
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             RateLimitPartition.GetFixedWindowLimiter(
                 partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
                 factory: partition => new FixedWindowRateLimiterOptions
