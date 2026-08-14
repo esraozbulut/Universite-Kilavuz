@@ -47,7 +47,7 @@ public class HomeController : Controller
 
         var apps = result.IsSuccess
             ? result.Data
-                .Where(a => a.IsActive && !a.IsDeleted)
+                .Where(a => a.IsActive && !a.IsDeleted && a.IsPinned)
                 .Where(a => a.AccessType == AccessType.Public || permittedAppIds.Contains(a.Id))
                 .OrderBy(a => a.SortOrder)
                 .ToList()

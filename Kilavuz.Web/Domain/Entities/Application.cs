@@ -13,6 +13,7 @@ public class Application : IEntity, IOrderable, IAuditable, ISoftDeletable
     
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsPinned { get; set; } = false;
     public AccessType AccessType { get; set; } = AccessType.Public;
     
     public int CreatedByUserId { get; set; }

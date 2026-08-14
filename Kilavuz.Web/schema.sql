@@ -28,6 +28,7 @@ CREATE TABLE Applications (
     IconPath NVARCHAR(500),
     SortOrder INT NOT NULL DEFAULT 0,
     IsActive BIT NOT NULL DEFAULT 1,
+    IsPinned BIT NOT NULL DEFAULT 0,
     AccessType NVARCHAR(50) NOT NULL DEFAULT 'Public' CHECK (AccessType IN ('Public', 'Restricted')), -- 'Public' or 'Restricted'
     CreatedByUserId INT NOT NULL FOREIGN KEY REFERENCES Users(Id),
     CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),

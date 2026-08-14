@@ -138,6 +138,7 @@ public class ApplicationController : Controller
         existing.Description = model.Description;
         existing.IconPath = model.IconPath;
         existing.IsActive = model.IsActive;
+        existing.IsPinned = model.IsPinned;
         existing.AccessType = model.AccessType;
 
         // GenericService UpdateAsync içinde _policy.CanModify kontrolü zaten yapılıyor!

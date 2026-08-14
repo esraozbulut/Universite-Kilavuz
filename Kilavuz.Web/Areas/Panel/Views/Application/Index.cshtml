@@ -24,6 +24,7 @@
                             <th>Ad</th>
                             <th>Açıklama</th>
                             <th>Erişim Tipi</th>
+                            <th>Sabit</th>
                             <th>Durum</th>
                             <th>Sıralama</th>
                             <th>Aksiyonlar</th>
@@ -50,6 +51,16 @@
                                     else
                                     {
                                         <span class="label label-warning">Kısıtlı</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsPinned)
+                                    {
+                                        <span class="label label-success"><i class="fa fa-thumb-tack"></i> Evet</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="label label-default">Hayır</span>
                                     }
                                 </td>
                                 <td>
