@@ -56,24 +56,61 @@ public class ApplicationController : Controller
         {
             List<int> permittedAppIds = new();
             using var connection = _connectionFactory.CreateConnection();
-            permittedAppIds = (await Dapper.SqlMapper.QueryAsync<int>(connection, @"
+            permittedAppIds = (await connection.QueryAsync<int>(@"
                 SELECT ContentId FROM ContentPermissions 
                 WHERE ContentType = 'Application' AND UserId = @UserId", 
                 new { UserId = currentUserId })).AsList();
 
+            // Rev.D: Departman yetkilisi filtrelemesi
+            var authorizedDeptIds = (await connection.QueryAsync<int>(@"
+                SELECT DepartmentId FROM DepartmentUsers WHERE UserId = @UserId",
+                new { UserId = currentUserId })).AsList();
+
             apps = apps.Where(a => 
-                a.AccessType == AccessType.Public || 
-                a.CreatedByUserId == currentUserId || 
-                permittedAppIds.Contains(a.Id)
+                a.DepartmentId.HasValue && authorizedDeptIds.Contains(a.DepartmentId.Value) &&
+                (a.AccessType == AccessType.Public || 
+                 a.CreatedByUserId == currentUserId || 
+                 permittedAppIds.Contains(a.Id))
             ).ToList();
         }
+
+        // Tüm departman isimlerini alıp Dictionary olarak View'a gönderelim (Index tablosunda göstermek için)
+        using var conn = _connectionFactory.CreateConnection();
+        var allDepts = await conn.QueryAsync("SELECT Id, Name FROM Departments");
+        ViewBag.DepartmentNames = allDepts.ToDictionary(k => (int)k.Id, v => (string)v.Name);
 
         return View(apps);
     }
 
-    [HttpGet]
-    public IActionResult Create()
+    private async Task PrepareDepartmentDropdownAsync()
     {
+        using var connection = _connectionFactory.CreateConnection();
+        var currentUserId = GetCurrentUserId();
+        
+        IEnumerable<Kilavuz.Web.Domain.Entities.Department> departments;
+        
+        if (User.IsInRole("SuperAdmin"))
+        {
+            departments = await connection.QueryAsync<Kilavuz.Web.Domain.Entities.Department>(
+                "SELECT Id, Name FROM Departments WHERE IsActive = 1 AND IsDeleted = 0");
+        }
+        else
+        {
+            departments = await connection.QueryAsync<Kilavuz.Web.Domain.Entities.Department>(@"
+                SELECT d.Id, d.Name 
+                FROM Departments d
+                INNER JOIN DepartmentUsers du ON d.Id = du.DepartmentId
+                WHERE d.IsActive = 1 AND d.IsDeleted = 0 AND du.UserId = @UserId",
+                new { UserId = currentUserId });
+        }
+        
+        ViewBag.Departments = departments;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        await PrepareDepartmentDropdownAsync();
         return View();
     }
 
@@ -82,7 +119,10 @@ public class ApplicationController : Controller
     public async Task<IActionResult> Create(AppEntity model)
     {
         if (!ModelState.IsValid)
+        {
+            await PrepareDepartmentDropdownAsync();
             return View(model);
+        }
 
         if (!User.IsInRole("SuperAdmin"))
         {
@@ -98,6 +138,7 @@ public class ApplicationController : Controller
         }
 
         TempData["ErrorMessage"] = result.Message;
+        await PrepareDepartmentDropdownAsync();
         return View(model);
     }
 
@@ -111,16 +152,26 @@ public class ApplicationController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        // Yetkili sadece kendi kaydını editleyebilmelidir
-        // GetByIdAsync tüm kayıtları getirebilir, form açılmadan önce manuel kontrol yapabiliriz.
-        // Veya view içinde saklayıp Update'te patlatırız ama formun açılmaması daha iyidir.
         var app = result.Data;
-        if (User.IsInRole("Yetkili") && app.CreatedByUserId != GetCurrentUserId())
+        if (!User.IsInRole("SuperAdmin"))
         {
-            TempData["ErrorMessage"] = "Bu uygulamayı düzenleme yetkiniz yok.";
-            return RedirectToAction(nameof(Index));
+            if (!app.DepartmentId.HasValue) 
+            {
+                 TempData["ErrorMessage"] = "Ana üniversite uygulamalarını düzenleme yetkiniz yok.";
+                 return RedirectToAction(nameof(Index));
+            }
+            using var connection = _connectionFactory.CreateConnection();
+            var hasAccess = await connection.QueryFirstOrDefaultAsync<bool>(
+                "SELECT CAST(1 AS BIT) FROM DepartmentUsers WHERE DepartmentId = @DeptId AND UserId = @UserId",
+                new { DeptId = app.DepartmentId.Value, UserId = GetCurrentUserId() });
+            if (!hasAccess)
+            {
+                 TempData["ErrorMessage"] = "Bu uygulamayı düzenleme yetkiniz yok.";
+                 return RedirectToAction(nameof(Index));
+            }
         }
 
+        await PrepareDepartmentDropdownAsync();
         return View(app);
     }
 
@@ -129,7 +180,10 @@ public class ApplicationController : Controller
     public async Task<IActionResult> Edit(AppEntity model)
     {
         if (!ModelState.IsValid)
+        {
+            await PrepareDepartmentDropdownAsync();
             return View(model);
+        }
 
         var existingResult = await _applicationService.GetByIdAsync(model.Id);
         if (!existingResult.IsSuccess)
@@ -139,6 +193,19 @@ public class ApplicationController : Controller
         }
 
         var existing = existingResult.Data;
+        
+        if (!User.IsInRole("SuperAdmin"))
+        {
+            if (model.DepartmentId != existing.DepartmentId)
+            {
+                model.DepartmentId = existing.DepartmentId; // Yetkisiz değiştirme denemesi geri alınır
+            }
+        }
+        else
+        {
+            existing.DepartmentId = model.DepartmentId;
+        }
+
         existing.Name = model.Name;
         existing.Description = model.Description;
         existing.IconPath = model.IconPath;
@@ -161,6 +228,7 @@ public class ApplicationController : Controller
         }
 
         TempData["ErrorMessage"] = result.Message;
+        await PrepareDepartmentDropdownAsync();
         return View(model);
     }
 

@@ -1,9 +1,17 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] | Kurumsal Kılavuz</title>
+    
+    <style>
+        .custom-hover-dropdown:hover .dropdown-menu {
+            display: block;
+            margin-top: 0;
+        }
+    </style>
 
     <link href="~/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/font-awesome/css/font-awesome.css" rel="stylesheet">
@@ -23,11 +31,37 @@
                     </button>
                     <div class="navbar-collapse collapse" id="navbar">
                         <ul class="nav navbar-nav mr-auto">
-                            <li class="active">
+                            <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
                                 <a aria-expanded="false" role="button" href="/"> Ana Sayfa</a>
+                            </li>
+                            <li class="dropdown custom-hover-dropdown">
+                                <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Departmanlar</a>
+                                <ul role="menu" class="dropdown-menu">
+
+                                    @{
+                                        var navDepts = new System.Collections.Generic.List<Kilavuz.Web.Domain.Entities.Department>();
+                                        using (var navConn = new Microsoft.Data.SqlClient.SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+                                        {
+                                            navDepts = Dapper.SqlMapper.Query<Kilavuz.Web.Domain.Entities.Department>(navConn, 
+                                                "SELECT Id, Name, Slug FROM Departments WHERE IsActive = 1 AND IsDeleted = 0 ORDER BY Name").ToList();
+                                        }
+                                    }
+                                    @foreach (var d in navDepts)
+                                    {
+                                        <li><a href="/kilavuz/@d.Slug"><i class="fa fa-building"></i> @d.Name</a></li>
+                                    }
+                                </ul>
                             </li>
                         </ul>
                         <ul class="nav navbar-top-links navbar-right">
+                            @if (ViewContext.RouteData.Values["departmentSlug"] != null)
+                            {
+                                <li>
+                                    <a href="/kilavuz">
+                                        <i class="fa fa-university"></i> Üniversite Kılavuzuna Dön
+                                    </a>
+                                </li>
+                            }
                             @if (User.Identity?.IsAuthenticated == true)
                             {
                                 @if (User.IsInRole("SuperAdmin") || User.IsInRole("Yetkili"))

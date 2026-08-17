@@ -1,19 +1,20 @@
-@model Kilavuz.Web.Models.HomeViewModel
+@model IEnumerable<Kilavuz.Web.Domain.Entities.Application>
 @using Kilavuz.Web.Domain.Enums
 @{
-    ViewData["Title"] = "Ana Sayfa";
+    var title = ViewBag.DepartmentName != null ? ViewBag.DepartmentName + " Kılavuzları" : "Üniversite Kılavuzu";
+    ViewData["Title"] = title;
     Layout = "~/Views/Shared/_PublicLayout.cshtml";
 }
 
 <div class="row m-b-lg m-t-lg">
     <div class="col-md-12 text-center">
-        <h2>Kurumsal Kullanım Kılavuzu</h2>
-        <p class="text-muted">Kılavuzlara ulaşmak için ilgili departmanı veya Üniversite Kılavuzunu seçin.</p>
+        <h2>@title</h2>
+        <p class="text-muted">Aşağıdan incelemek istediğiniz uygulamayı seçebilirsiniz.</p>
 
         <form action="/Search" method="get" class="form-inline m-t-md justify-content-center">
             <div class="input-group" style="max-width:500px; width:100%">
                 <input id="searchInput" type="text" name="q" class="form-control form-control-lg"
-                       placeholder="Tüm kılavuzlarda ara..." autocomplete="off" />
+                       placeholder="Bu kılavuzda ara..." autocomplete="off" />
                 <div class="input-group-append">
                     <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
                 </div>
@@ -22,16 +23,19 @@
     </div>
 </div>
 
-
-@if (Model.Applications.Any())
+@if (!Model.Any())
 {
     <div class="row">
-        <div class="col-md-12">
-            <h3 class="mb-4 text-center text-muted">Öne Çıkan Kılavuzlar</h3>
+        <div class="col-md-12 text-center text-muted">
+            <i class="fa fa-inbox fa-3x"></i>
+            <p class="m-t-md">Bu bölümde henüz aktif bir uygulama bulunmamaktadır.</p>
         </div>
     </div>
+}
+else
+{
     <div class="row">
-        @foreach (var app in Model.Applications)
+        @foreach (var app in Model)
         {
             <div class="col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
                 <div class="ibox w-100 mb-0">
@@ -70,4 +74,3 @@
         }
     </div>
 }
-

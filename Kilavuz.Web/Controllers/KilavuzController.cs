@@ -55,6 +55,101 @@ public class KilavuzController : Controller
         return hasPermission > 0 ? null : Forbid();
     }
 
+    // ─── Kılavuz Listeleme (Ana Kılavuz) ─────────────────────────────────────
+    // Route: /kilavuz
+    [HttpGet("kilavuz")]
+    public async Task<IActionResult> Index()
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var userId = GetCurrentUserId();
+        
+        // Sadece Ana Üniversite Kılavuzu'na ait (DepartmentId IS NULL) uygulamaları çek
+        var apps = (await connection.QueryAsync<AppEntity>(@"
+            SELECT * FROM Applications 
+            WHERE IsDeleted = 0 AND IsActive = 1 AND DepartmentId IS NULL
+            ORDER BY SortOrder ASC")).AsList();
+
+        List<int> permittedAppIds = new();
+        if (userId != null)
+        {
+            permittedAppIds = (await connection.QueryAsync<int>(@"
+                SELECT ContentId FROM ContentPermissions 
+                WHERE ContentType = 'Application' AND UserId = @UserId", 
+                new { UserId = userId })).AsList();
+        }
+
+        var filteredApps = apps.Where(a => 
+            a.AccessType == AccessType.Public || permittedAppIds.Contains(a.Id)
+        ).ToList();
+
+        var pinnedApps = filteredApps.Where(a => a.IsPinned).OrderBy(a => a.SortOrder).ToList();
+        List<AppEntity> finalApps;
+        if (pinnedApps.Count >= 10)
+        {
+            finalApps = pinnedApps;
+        }
+        else
+        {
+            var recentApps = filteredApps.Where(a => !a.IsPinned).OrderByDescending(a => a.Id).Take(10 - pinnedApps.Count).ToList();
+            finalApps = pinnedApps.Concat(recentApps).ToList();
+        }
+
+        ViewBag.DepartmentName = null; // Ana Kılavuz işareti
+        return View(finalApps);
+    }
+
+    // ─── Kılavuz Listeleme (Departman Kılavuzu) ──────────────────────────────
+    // Route: /kilavuz/{departmentSlug}
+    [HttpGet("kilavuz/{departmentSlug}")]
+    public async Task<IActionResult> DepartmentIndex(string departmentSlug)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var userId = GetCurrentUserId();
+
+        // Departmanı bul (Aktif ve Silinmemiş)
+        var department = await connection.QuerySingleOrDefaultAsync<Department>(@"
+            SELECT * FROM Departments 
+            WHERE Slug = @Slug AND IsDeleted = 0 AND IsActive = 1", 
+            new { Slug = departmentSlug });
+
+        if (department == null) return NotFound();
+
+        // İlgili departmana ait uygulamaları çek
+        var apps = (await connection.QueryAsync<AppEntity>(@"
+            SELECT * FROM Applications 
+            WHERE IsDeleted = 0 AND IsActive = 1 AND DepartmentId = @DeptId
+            ORDER BY SortOrder ASC", new { DeptId = department.Id })).AsList();
+
+        List<int> permittedAppIds = new();
+        if (userId != null)
+        {
+            permittedAppIds = (await connection.QueryAsync<int>(@"
+                SELECT ContentId FROM ContentPermissions 
+                WHERE ContentType = 'Application' AND UserId = @UserId", 
+                new { UserId = userId })).AsList();
+        }
+
+        var filteredApps = apps.Where(a => 
+            a.AccessType == AccessType.Public || permittedAppIds.Contains(a.Id)
+        ).ToList();
+
+        var pinnedApps = filteredApps.Where(a => a.IsPinned).OrderBy(a => a.SortOrder).ToList();
+        List<AppEntity> finalApps;
+        if (pinnedApps.Count >= 10)
+        {
+            finalApps = pinnedApps;
+        }
+        else
+        {
+            var recentApps = filteredApps.Where(a => !a.IsPinned).OrderByDescending(a => a.Id).Take(10 - pinnedApps.Count).ToList();
+            finalApps = pinnedApps.Concat(recentApps).ToList();
+        }
+
+        ViewBag.DepartmentName = department.Name;
+        // İstenilen view Kilavuz/Index.cshtml
+        return View("Index", finalApps);
+    }
+
     // ─── Uygulama Detayı ─────────────────────────────────────────────────────
     // Route: /kilavuz/{appId}
     [HttpGet("kilavuz/{appId:int}")]

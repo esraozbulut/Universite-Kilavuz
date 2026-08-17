@@ -31,7 +31,7 @@ namespace Kilavuz.Web.Application
                 if (entity == null)
                     return ServiceResult<bool>.Failure($"ID: {id} bulunamadı.");
 
-                if (!_policy.CanModify(entity, currentUserId, currentUserRole))
+                if (!await _policy.CanModifyAsync(entity, currentUserId, currentUserRole))
                 {
                     return ServiceResult<bool>.Failure("Bu işlem için yetkiniz bulunmamaktadır (Başka bir kullanıcının içeriği değiştirilemez).");
                 }

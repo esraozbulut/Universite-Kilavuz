@@ -23,6 +23,7 @@
                                 <th>Sıra</th>
                                 <th>İkon</th>
                                 <th>Ad</th>
+                                <th>Departman</th>
                                 <th>Açıklama</th>
                                 <th>Erişim Tipi</th>
                                 <th>Sabit</th>
@@ -43,6 +44,16 @@
                                         }
                                     </td>
                                     <td>@item.Name</td>
+                                    <td>
+                                        @if (item.DepartmentId.HasValue && ViewBag.DepartmentNames != null && ((Dictionary<int, string>)ViewBag.DepartmentNames).ContainsKey(item.DepartmentId.Value))
+                                        {
+                                            <span class="label label-info">@(((Dictionary<int, string>)ViewBag.DepartmentNames)[item.DepartmentId.Value])</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-primary">Üniversite Kılavuzu</span>
+                                        }
+                                    </td>
                                     <td>@item.Description</td>
                                     <td>
                                         @if (item.AccessType == Kilavuz.Web.Domain.Enums.AccessType.Public)

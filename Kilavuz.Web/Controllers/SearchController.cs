@@ -47,11 +47,13 @@ public class SearchController : Controller
                    a.Id,
                    a.Name AS Title,
                    COALESCE(a.Description, '') AS Snippet,
-                   NULL AS ParentName,
+                   COALESCE(d.Name, 'Üniversite Kılavuzu') AS ParentName,
                    a.Id AS AppId,
                    NULL AS CategoryId
             FROM Applications a
+            LEFT JOIN Departments d ON d.Id = a.DepartmentId
             WHERE a.IsDeleted = 0 AND a.IsActive = 1
+              AND (a.DepartmentId IS NULL OR (d.IsDeleted = 0 AND d.IsActive = 1))
               AND (a.Name LIKE @Q OR a.Description LIKE @Q)
               AND (
                     a.AccessType = 'Public'
@@ -74,12 +76,14 @@ public class SearchController : Controller
                    c.Id,
                    c.Name AS Title,
                    COALESCE(c.Description, '') AS Snippet,
-                   a.Name AS ParentName,
+                   a.Name + ' (' + COALESCE(d.Name, 'Üniversite Kılavuzu') + ')' AS ParentName,
                    a.Id AS AppId,
                    NULL AS CategoryId
             FROM Categories c
             JOIN Applications a ON a.Id = c.ApplicationId
+            LEFT JOIN Departments d ON d.Id = a.DepartmentId
             WHERE c.IsDeleted = 0 AND c.IsActive = 1
+              AND (a.DepartmentId IS NULL OR (d.IsDeleted = 0 AND d.IsActive = 1))
               AND (c.Name LIKE @Q OR c.Description LIKE @Q)
               AND a.IsDeleted = 0 AND a.IsActive = 1
               AND (
@@ -103,13 +107,15 @@ public class SearchController : Controller
                    p.Id,
                    p.Title AS Title,
                    LEFT(COALESCE(p.ContentHtml, ''), 200) AS Snippet,
-                   c.Name AS ParentName,
+                   c.Name + ' - ' + a.Name + ' (' + COALESCE(d.Name, 'Üniversite Kılavuzu') + ')' AS ParentName,
                    a.Id AS AppId,
                    c.Id AS CategoryId
             FROM Pages p
             JOIN Categories c ON c.Id = p.CategoryId
             JOIN Applications a ON a.Id = c.ApplicationId
+            LEFT JOIN Departments d ON d.Id = a.DepartmentId
             WHERE p.IsDeleted = 0 AND p.IsActive = 1
+              AND (a.DepartmentId IS NULL OR (d.IsDeleted = 0 AND d.IsActive = 1))
               AND (p.Title LIKE @Q OR p.ContentHtml LIKE @Q)
               AND a.IsDeleted = 0 AND a.IsActive = 1
               AND c.IsDeleted = 0 AND c.IsActive = 1

@@ -1,0 +1,80 @@
+@model Kilavuz.Web.Areas.Panel.Models.DepartmentUsersViewModel
+@{
+    ViewData["Title"] = "Departman Yetkilileri";
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="ibox ">
+            <div class="ibox-title">
+                <h5>@Model.Department.Name - Atanan Yetkililer</h5>
+            </div>
+            <div class="ibox-content">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı Adı</th>
+                            <th>Email</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.AssignedUsers.Any())
+                        {
+                            foreach (var user in Model.AssignedUsers)
+                            {
+                                <tr>
+                                    <td>@user.UserName</td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        <form action="/Panel/Department/RemoveUser" method="post" onsubmit="return confirm('Kullanıcıyı bu departmandan çıkarmak istediğinize emin misiniz?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="departmentId" value="@Model.Department.Id" />
+                                            <input type="hidden" name="userId" value="@user.Id" />
+                                            <button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-times"></i> Çıkar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Bu departmana henüz yetkili atanmamış.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="ibox ">
+            <div class="ibox-title">
+                <h5>Yeni Yetkili Ata</h5>
+            </div>
+            <div class="ibox-content">
+                <form action="/Panel/Department/AssignUser" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="departmentId" value="@Model.Department.Id" />
+                    
+                    <div class="form-group">
+                        <label>Kullanıcı Seçin</label>
+                        <select name="userId" class="form-control" required>
+                            <option value="">-- Seçiniz --</option>
+                            @foreach (var user in Model.AvailableUsers)
+                            {
+                                <option value="@user.Id">@user.UserName (@user.Email)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" @(Model.AvailableUsers.Any() ? "" : "disabled")>
+                        <i class="fa fa-plus"></i> Ata
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

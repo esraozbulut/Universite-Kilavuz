@@ -36,6 +36,11 @@ namespace Kilavuz.Web.Application
 
         public virtual async Task<ServiceResult<int>> CreateAsync(T entity, int currentUserId, string currentUserRole)
         {
+            if (!await _policy.CanCreateAsync(entity, currentUserId, currentUserRole))
+            {
+                return ServiceResult<int>.Failure("Bu işlem için yetkiniz bulunmamaktadır.");
+            }
+
             if (entity is IAuditable auditableEntity)
             {
                 auditableEntity.CreatedByUserId = currentUserId;
@@ -53,7 +58,7 @@ namespace Kilavuz.Web.Application
 
         public virtual async Task<ServiceResult<bool>> UpdateAsync(T entity, int currentUserId, string currentUserRole)
         {
-            if (!_policy.CanModify(entity, currentUserId, currentUserRole))
+            if (!await _policy.CanModifyAsync(entity, currentUserId, currentUserRole))
             {
                 return ServiceResult<bool>.Failure("Bu işlem için yetkiniz bulunmamaktadır.");
             }
@@ -76,7 +81,7 @@ namespace Kilavuz.Web.Application
                 var entity = await _repository.GetByIdAsync(id);
                 if (entity == null) return ServiceResult<bool>.Failure("Kayıt bulunamadı.");
 
-                if (!_policy.CanModify(entity, currentUserId, currentUserRole))
+                if (!await _policy.CanModifyAsync(entity, currentUserId, currentUserRole))
                 {
                     return ServiceResult<bool>.Failure("Bu işlem için yetkiniz bulunmamaktadır.");
                 }

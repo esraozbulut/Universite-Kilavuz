@@ -6,4 +6,5 @@ namespace Kilavuz.Web.Models;
 public class HomeViewModel
 {
     public List<Domain.Entities.Application> Applications { get; set; } = new();
+    public List<Domain.Entities.Department> Departments { get; set; } = new();
 }

@@ -45,15 +45,32 @@ public class HomeController : Controller
                 new { UserId = userId })).AsList();
         }
 
-        var apps = result.IsSuccess
-            ? result.Data
-                .Where(a => a.IsActive && !a.IsDeleted && a.IsPinned)
-                .Where(a => a.AccessType == AccessType.Public || permittedAppIds.Contains(a.Id))
-                .OrderBy(a => a.SortOrder)
-                .ToList()
+        var allApps = result.IsSuccess
+            ? result.Data.Where(a => a.IsActive && !a.IsDeleted && a.DepartmentId == null).ToList()
             : new();
 
-        return View(new HomeViewModel { Applications = apps });
+        var filteredApps = allApps
+            .Where(a => a.AccessType == AccessType.Public || permittedAppIds.Contains(a.Id))
+            .ToList();
+
+        var pinnedApps = filteredApps.Where(a => a.IsPinned).OrderBy(a => a.SortOrder).ToList();
+        List<AppEntity> finalApps;
+
+        if (pinnedApps.Count >= 10)
+        {
+            finalApps = pinnedApps;
+        }
+        else
+        {
+            var recentApps = filteredApps.Where(a => !a.IsPinned).OrderByDescending(a => a.Id).Take(10 - pinnedApps.Count).ToList();
+            finalApps = pinnedApps.Concat(recentApps).ToList();
+        }
+
+        using var conn = _connectionFactory.CreateConnection();
+        var departments = (await conn.QueryAsync<Kilavuz.Web.Domain.Entities.Department>(
+            "SELECT Id, Name, Slug, Description, IsActive, IsDeleted FROM Departments WHERE IsActive = 1 AND IsDeleted = 0")).AsList();
+
+        return View(new HomeViewModel { Applications = finalApps, Departments = departments });
     }
 
     public IActionResult Privacy()
