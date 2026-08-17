@@ -9,6 +9,7 @@
     <link href="~/font-awesome/css/font-awesome.css" rel="stylesheet">
     <link href="~/css/animate.css" rel="stylesheet">
     <link href="~/css/style.css" rel="stylesheet">
+    <link href="~/css/site.css" rel="stylesheet">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="top-navigation">
@@ -58,7 +59,7 @@
                 </nav>
             </div>
 
-            <div class="wrapper wrapper-content">
+            <div class="wrapper wrapper-content animated fadeInRight">
                 <div class="container">
                     @RenderBody()
                 </div>
@@ -67,6 +68,10 @@
             @await Html.PartialAsync("_Footer")
         </div>
     </div>
+    
+    <a href="#" id="scrollToTop" class="btn btn-primary btn-circle btn-lg" style="position: fixed; bottom: 20px; right: 20px; display: none; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+        <i class="fa fa-chevron-up"></i>
+    </a>
 
     <!-- Mainly scripts -->
     <script src="~/js/jquery-3.1.1.min.js"></script>
@@ -78,6 +83,23 @@
     <!-- Custom and plugin javascript -->
     <script src="~/js/inspinia.js"></script>
     <script src="~/js/plugins/pace/pace.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+            $(window).scroll(function () {
+                if ($(this).scrollTop() > 100) {
+                    $('#scrollToTop').fadeIn();
+                } else {
+                    $('#scrollToTop').fadeOut();
+                }
+            });
+
+            $('#scrollToTop').click(function () {
+                $("html, body").animate({ scrollTop: 0 }, 600);
+                return false;
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

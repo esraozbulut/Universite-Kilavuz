@@ -122,10 +122,12 @@ app.Use(async (context, next) =>
 if (app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler(_ => { }); // This allows IExceptionHandler to run in Dev without a specific fallback route
+    app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
+    app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
     app.UseHsts();
     app.UseHttpsRedirection(); // Yalnızca prod ortamında
 }

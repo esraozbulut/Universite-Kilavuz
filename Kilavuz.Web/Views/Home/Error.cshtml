@@ -1,0 +1,43 @@
+@model Kilavuz.Web.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Hata";
+    var statusCode = ViewBag.StatusCode as int?;
+}
+
+<div class="middle-box text-center animated fadeInDown" style="margin-top: 100px;">
+    @if (statusCode == 404)
+    {
+        <h1>404</h1>
+        <h3 class="font-bold">Sayfa Bulunamadı</h3>
+        <div class="error-desc">
+            Üzgünüz, aradığınız sayfaya ulaşılamıyor. Sayfa silinmiş, taşınmış veya adresi yanlış yazılmış olabilir.
+            <br/><br/>
+            <a href="/" class="btn btn-primary m-t">Ana Sayfaya Dön</a>
+        </div>
+    }
+    else if (statusCode == 403)
+    {
+        <h1>403</h1>
+        <h3 class="font-bold">Erişim Reddedildi</h3>
+        <div class="error-desc">
+            Üzgünüz, bu sayfayı görüntüleme yetkiniz bulunmamaktadır.
+            <br/><br/>
+            <a href="/" class="btn btn-primary m-t">Ana Sayfaya Dön</a>
+        </div>
+    }
+    else
+    {
+        <h1>500</h1>
+        <h3 class="font-bold">Sunucu Hatası</h3>
+        <div class="error-desc">
+            Sistemde beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyiniz. Destek ekibimiz konuyla ilgili bilgilendirilmiştir.
+            <br/><br/>
+            <a href="/" class="btn btn-primary m-t">Ana Sayfaya Dön</a>
+            @if (Model != null && !string.IsNullOrEmpty(Model.RequestId))
+            {
+                <br /><br />
+                <small>Hata Kodu: @Model.RequestId</small>
+            }
+        </div>
+    }
+</div>

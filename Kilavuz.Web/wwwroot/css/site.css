@@ -73,3 +73,17 @@ body {
 .content-file-card {
     display: inline-block;
 }
+
+/* Faz 10 - Responsive Uyumluluk */
+/* Kılavuz içeriklerindeki (rich text) resimlerin mobilde taşmasını engeller */
+.ibox-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tabloların etrafında yatay kaydırma çubuğu çıkmasını sağlamak için yardımcı sınıf (Inspinia genelde table-responsive div'i ile kullanır) */
+@media (max-width: 768px) {
+    .table-responsive {
+        border: 0;
+    }
+}

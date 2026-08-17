@@ -8,7 +8,8 @@
     <div class="col-md-12">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-            <li class="breadcrumb-item">@Model.Application.Name</li>
+            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id">@Model.Application.Name</a></li>
+            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id/@Model.ActiveCategory.Id">@Model.ActiveCategory.Name</a></li>
             <li class="breadcrumb-item active">@Model.ActivePage.Title</li>
         </ol>
         <h2>

@@ -61,9 +61,16 @@ public class HomeController : Controller
         return View();
     }
 
+    [Route("Home/Error/{statusCode?}")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    public IActionResult Error(int? statusCode = null)
     {
+        ViewBag.StatusCode = statusCode;
+        
+        // Loglanan exception bilgisini almak için:
+        // var exceptionHandlerPathFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        // Ancak biz loglamayı GlobalExceptionHandler içinde ErrorLogs tablosuna yapıyoruz zaten.
+        
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }
