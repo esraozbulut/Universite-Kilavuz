@@ -19,15 +19,15 @@ namespace Kilavuz.Web.Application
 
         public async Task<bool> CanModifyAsync(T entity, int currentUserId, string currentUserRole)
         {
-            return await CheckAccessAsync(entity, currentUserId, currentUserRole);
+            return await CheckAccessAsync(entity, currentUserId, currentUserRole, isCreate: false);
         }
 
         public async Task<bool> CanCreateAsync(T entity, int currentUserId, string currentUserRole)
         {
-            return await CheckAccessAsync(entity, currentUserId, currentUserRole);
+            return await CheckAccessAsync(entity, currentUserId, currentUserRole, isCreate: true);
         }
 
-        private async Task<bool> CheckAccessAsync(T entity, int currentUserId, string currentUserRole)
+        private async Task<bool> CheckAccessAsync(T entity, int currentUserId, string currentUserRole, bool isCreate)
         {
             // 1. SuperAdmin her şeyi değiştirebilir
             if (currentUserRole == UserRoleType.SuperAdmin.ToString()) 
@@ -41,7 +41,12 @@ namespace Kilavuz.Web.Application
             if (entity is IDepartmentOwned deptOwned)
             {
                 if (!deptOwned.DepartmentId.HasValue) 
-                    return false; // Ana üniversite kılavuzu (SuperAdmin yönetir)
+                {
+                    // Ana üniversite kılavuzu
+                    if (isCreate) return true;
+                    if (entity is IAuditable aud) return aud.CreatedByUserId == currentUserId;
+                    return false;
+                }
                 
                 return await HasDepartmentAccessAsync(deptOwned.DepartmentId.Value, currentUserId);
             }
@@ -49,25 +54,32 @@ namespace Kilavuz.Web.Application
             if (entity is Category cat)
             {
                 var deptId = await GetDeptIdByAppIdAsync(cat.ApplicationId);
-                if (deptId.HasValue) 
-                    return await HasDepartmentAccessAsync(deptId.Value, currentUserId);
+                if (!deptId.HasValue) 
+                {
+                    if (isCreate) return true;
+                    return cat.CreatedByUserId == currentUserId;
+                }
                 
-                return false;
+                return await HasDepartmentAccessAsync(deptId.Value, currentUserId);
             }
 
             if (entity is Page page)
             {
                 var deptId = await GetDeptIdByCategoryIdAsync(page.CategoryId);
-                if (deptId.HasValue) 
-                    return await HasDepartmentAccessAsync(deptId.Value, currentUserId);
-                
-                return false;
+                if (!deptId.HasValue) 
+                {
+                    if (isCreate) return true;
+                    return page.CreatedByUserId == currentUserId;
+                }
+
+                return await HasDepartmentAccessAsync(deptId.Value, currentUserId);
             }
 
             // Geri kalan (ContentPermission vb.) işlemleri SuperAdmin dışındakilere yasakla
             // IAuditable fallback:
             if (entity is IAuditable auditableEntity)
             {
+                if (isCreate) return true;
                 return auditableEntity.CreatedByUserId == currentUserId;
             }
 

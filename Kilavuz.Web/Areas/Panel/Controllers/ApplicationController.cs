@@ -67,7 +67,10 @@ public class ApplicationController : Controller
                 new { UserId = currentUserId })).AsList();
 
             apps = apps.Where(a => 
-                a.DepartmentId.HasValue && authorizedDeptIds.Contains(a.DepartmentId.Value) &&
+                (
+                    (a.DepartmentId.HasValue && authorizedDeptIds.Contains(a.DepartmentId.Value)) ||
+                    (!a.DepartmentId.HasValue && a.CreatedByUserId == currentUserId)
+                ) &&
                 (a.AccessType == AccessType.Public || 
                  a.CreatedByUserId == currentUserId || 
                  permittedAppIds.Contains(a.Id))
@@ -157,17 +160,23 @@ public class ApplicationController : Controller
         {
             if (!app.DepartmentId.HasValue) 
             {
-                 TempData["ErrorMessage"] = "Ana üniversite uygulamalarını düzenleme yetkiniz yok.";
-                 return RedirectToAction(nameof(Index));
+                if (app.CreatedByUserId != GetCurrentUserId())
+                {
+                    TempData["ErrorMessage"] = "Başkasının oluşturduğu ana üniversite uygulamalarını düzenleme yetkiniz yok.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
-            using var connection = _connectionFactory.CreateConnection();
-            var hasAccess = await connection.QueryFirstOrDefaultAsync<bool>(
-                "SELECT CAST(1 AS BIT) FROM DepartmentUsers WHERE DepartmentId = @DeptId AND UserId = @UserId",
-                new { DeptId = app.DepartmentId.Value, UserId = GetCurrentUserId() });
-            if (!hasAccess)
+            else
             {
-                 TempData["ErrorMessage"] = "Bu uygulamayı düzenleme yetkiniz yok.";
-                 return RedirectToAction(nameof(Index));
+                using var connection = _connectionFactory.CreateConnection();
+                var hasAccess = await connection.QueryFirstOrDefaultAsync<bool>(
+                    "SELECT CAST(1 AS BIT) FROM DepartmentUsers WHERE DepartmentId = @DeptId AND UserId = @UserId",
+                    new { DeptId = app.DepartmentId.Value, UserId = GetCurrentUserId() });
+                if (!hasAccess)
+                {
+                     TempData["ErrorMessage"] = "Bu uygulamayı düzenleme yetkiniz yok.";
+                     return RedirectToAction(nameof(Index));
+                }
             }
         }
 

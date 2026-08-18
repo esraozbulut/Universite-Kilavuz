@@ -143,7 +143,7 @@ public class AuthController : Controller
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         _logger.Information("Kullanıcı çıkış yaptı. Kullanıcı Adı: {Username}", User.Identity?.Name);
-        return RedirectToAction(nameof(Login));
+        return RedirectToAction("Index", "Home", new { area = "" });
     }
 
     [HttpGet]

@@ -25,10 +25,7 @@
                         <label class="col-sm-2 col-form-label">Kılavuz / Departman</label>
                         <div class="col-sm-10">
                             <select asp-for="DepartmentId" class="form-control">
-                                @if (User.IsInRole("SuperAdmin"))
-                                {
-                                    <option value="">-- Üniversite Kılavuzu --</option>
-                                }
+                                <option value="">-- Üniversite Kılavuzu --</option>
                                 @if (ViewBag.Departments != null)
                                 {
                                     foreach (var dept in ViewBag.Departments as IEnumerable<Kilavuz.Web.Domain.Entities.Department>)
