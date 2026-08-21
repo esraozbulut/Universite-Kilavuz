@@ -60,9 +60,8 @@
                     <input type="hidden" name="departmentId" value="@Model.Department.Id" />
                     
                     <div class="form-group">
-                        <label>Kullanıcı Seçin</label>
-                        <select name="userId" class="form-control" required>
-                            <option value="">-- Seçiniz --</option>
+                        <label>Kullanıcı(lar) Seçin</label>
+                        <select name="userIds" class="form-control select2" multiple="multiple" data-placeholder="Kullanıcı arayın veya seçin..." required>
                             @foreach (var user in Model.AvailableUsers)
                             {
                                 <option value="@user.Id">@user.UserName (@user.Email)</option>
@@ -78,3 +77,14 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                width: '100%',
+                language: "tr"
+            });
+        });
+    </script>
+}

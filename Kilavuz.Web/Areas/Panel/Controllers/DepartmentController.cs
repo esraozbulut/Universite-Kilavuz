@@ -197,27 +197,41 @@ namespace Kilavuz.Web.Areas.Panel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AssignUser(int departmentId, int userId)
+        public async Task<IActionResult> AssignUser(int departmentId, int[] userIds)
         {
-            using var connection = _db.CreateConnection();
-            
-            var exists = await connection.QueryFirstOrDefaultAsync<bool>("SELECT CAST(1 AS BIT) FROM DepartmentUsers WHERE DepartmentId = @DeptId AND UserId = @UserId", new { DeptId = departmentId, UserId = userId });
-            
-            if (exists)
+            if (userIds == null || userIds.Length == 0)
             {
-                TempData["ErrorMessage"] = "Bu kullanıcı zaten bu departmana atanmış.";
+                TempData["ErrorMessage"] = "Lütfen en az bir kullanıcı seçin.";
                 return RedirectToAction(nameof(Users), new { id = departmentId });
             }
 
+            using var connection = _db.CreateConnection();
             var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int.TryParse(currentUserIdStr, out int currentUserId);
 
-            await connection.ExecuteAsync(@"
-                INSERT INTO DepartmentUsers (DepartmentId, UserId, AssignedByUserId, AssignedAt) 
-                VALUES (@DeptId, @UserId, @AssignedBy, @AssignedAt)", 
-                new { DeptId = departmentId, UserId = userId, AssignedBy = currentUserId, AssignedAt = DateTime.UtcNow });
+            int addedCount = 0;
+            foreach (var userId in userIds)
+            {
+                var exists = await connection.QueryFirstOrDefaultAsync<bool>("SELECT CAST(1 AS BIT) FROM DepartmentUsers WHERE DepartmentId = @DeptId AND UserId = @UserId", new { DeptId = departmentId, UserId = userId });
+                if (!exists)
+                {
+                    await connection.ExecuteAsync(@"
+                        INSERT INTO DepartmentUsers (DepartmentId, UserId, AssignedByUserId, AssignedAt) 
+                        VALUES (@DeptId, @UserId, @AssignedBy, @AssignedAt)", 
+                        new { DeptId = departmentId, UserId = userId, AssignedBy = currentUserId, AssignedAt = DateTime.UtcNow });
+                    addedCount++;
+                }
+            }
 
-            TempData["SuccessMessage"] = "Kullanıcı departmana başarıyla atandı.";
+            if (addedCount > 0)
+            {
+                TempData["SuccessMessage"] = $"{addedCount} kullanıcı departmana başarıyla atandı.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Seçilen kullanıcı(lar) zaten bu departmana atanmış.";
+            }
+            
             return RedirectToAction(nameof(Users), new { id = departmentId });
         }
 

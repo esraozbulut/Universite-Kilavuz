@@ -79,12 +79,12 @@
 
                 <hr />
 
-                @* ── Kullanıcı Ekle (Checkbox) ────────────────────────────────── *@
+                @* ── Kullanıcı Ekle (Select2) ────────────────────────────────── *@
                 <h4>Kullanıcı İzinlerini Güncelle</h4>
                 <p class="text-muted small">
                     <i class="fa fa-info-circle"></i>
-                    İşaretli kullanıcılar bu içeriğe erişebilir. "Kaydet" butonuna basıldığında
-                    <strong>tüm izinler sıfırlanır</strong> ve yalnızca işaretli kullanıcılara yeniden atanır.
+                    Aşağıdan bu içeriğe erişmesini istediğiniz kullanıcıları seçebilirsiniz. "Kaydet" butonuna basıldığında
+                    <strong>tüm izinler sıfırlanır</strong> ve yalnızca seçilen kullanıcılara yeniden atanır.
                 </p>
 
                 @if (!Model.AllUsers.Any())
@@ -98,38 +98,20 @@
                         <input type="hidden" name="contentType" value="@Model.ContentType" />
                         <input type="hidden" name="contentId" value="@Model.ContentId" />
 
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th width="40">Erişim</th>
-                                        <th>Kullanıcı</th>
-                                        <th>Rolleri</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var user in Model.AllUsers)
+                        <div class="form-group">
+                            <select name="userIds" class="form-control select2" multiple="multiple" data-placeholder="Kullanıcı arayın veya seçin...">
+                                @foreach (var user in Model.AllUsers)
+                                {
+                                    if (user.IsGranted)
                                     {
-                                        <tr class="@(user.IsGranted ? "success" : "")">
-                                            <td>
-                                                <input type="checkbox"
-                                                       name="userIds"
-                                                       value="@user.Id"
-                                                       @(user.IsGranted ? "checked" : "")
-                                                       class="permission-check" />
-                                            </td>
-                                            <td>
-                                                <label class="mb-0" style="font-weight: normal; cursor: pointer;">
-                                                    @user.UserName
-                                                </label>
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">@user.Roles</small>
-                                            </td>
-                                        </tr>
+                                        <option value="@user.Id" selected>@user.UserName (@user.Roles)</option>
                                     }
-                                </tbody>
-                            </table>
+                                    else
+                                    {
+                                        <option value="@user.Id">@user.UserName (@user.Roles)</option>
+                                    }
+                                }
+                            </select>
                         </div>
 
                         <div class="hr-line-dashed"></div>
@@ -137,7 +119,6 @@
                         <button type="submit" class="btn btn-primary" id="savePermissionsBtn">
                             <i class="fa fa-save"></i> Seçilen Kullanıcıları Kaydet
                         </button>
-                        <span class="text-muted ml-2 small" id="selectedCount"></span>
                     </form>
                 }
 
@@ -149,23 +130,11 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-
-            // Seçili kullanıcı sayısını güncelle
-            function updateCount() {
-                var count = $('.permission-check:checked').length;
-                $('#selectedCount').text(count + ' kullanıcı seçili');
-            }
-
-            $('.permission-check').on('change', updateCount);
-            updateCount();
-
-            // Satıra tıklanınca checkbox toggle
-            $('table.table-hover tbody tr').on('click', function (e) {
-                if ($(e.target).is('input[type=checkbox]')) return;
-                var cb = $(this).find('.permission-check');
-                cb.prop('checked', !cb.prop('checked'));
-                $(this).toggleClass('success');
-                updateCount();
+            
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%',
+                language: "tr"
             });
 
             // Revoke (tek izin kaldırma) onayı
@@ -188,7 +157,7 @@
             // Toplu kaydetme onayı
             $('#savePermissionsBtn').on('click', function (e) {
                 e.preventDefault();
-                var count = $('.permission-check:checked').length;
+                var count = $('.select2').val() ? $('.select2').val().length : 0;
                 var form = $(this).closest('form');
                 swal({
                     title: "İzinleri güncelle?",

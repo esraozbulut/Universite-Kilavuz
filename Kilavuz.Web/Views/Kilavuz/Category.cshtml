@@ -7,11 +7,7 @@
 
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
     <div class="col-md-12">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-            <li class="breadcrumb-item"><a href="/kilavuz/@Model.Application.Id">@Model.Application.Name</a></li>
-            <li class="breadcrumb-item active">@Model.Category.Name</li>
-        </ol>
+
         <h2><i class="fa fa-folder-open-o"></i> @Model.Category.Name</h2>
         @if (!string.IsNullOrEmpty(Model.Category.Description))
         {
